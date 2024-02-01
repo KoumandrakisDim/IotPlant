@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Plant System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon"
+    href="https://static.vecteezy.com/system/resources/thumbnails/011/406/779/small/smart-growth-logo-design-light-bulb-leaf-garden-plant-innovation-logo-design-free-vector.jpg"
+    type="image/x-icon">
+  <!-- Option 1: Include in HTML -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+</head>
+
+<body>
+
+  <div class="fileContainer" id="loginContainer">
+    <div id="alert" class="alert alert-danger">Wrong username or password</div>
+    <div class="d-flex justify-content-center">
+      <h1>Smart Plant System</h1>
+
+    </div>
+
+    <div class="row d-flex justify-content-center d-none" id="registerPage">
+
+      <div class="col-6">
+
+        <form class="form needs-validation" id="form" novalidate>
+          <span class="d-block" style="font-weight: bold;">Register</span>
+          <label for="username">Username</label>
+          <input type="text" class="form-control" name="username" id="usernameRegister" required>
+          <div class="invalid-feedback">Field is required!</div>
+          <label for="password">Password</label>
+          <input type="password" class="form-control" name="password" id="passwordRegister" required>
+          <div class="invalid-feedback">Field is required!</div>
+          <label for="device_id">Device ID</label>
+          <input type="text" class="form-control" name="device_id" id="deviceId">
+          <button class="btn btn-primary mt-2" id="registerButton">Register</button>
+          <a href="" onclick="toggleRegister('login')">Login</a>
+        </form>
+      </div>
+    </div>
+    <div class="row d-flex justify-content-center" id="loginPage">
+      <div class="col-6">
+
+        <form method="post" class="form">
+          <span class="d-block" style="font-weight: bold;">Login</span>
+          <label for="username">Username</label>
+          <input type="text" class="form-control" name="username" id="username" required>
+          <label for="password">Password</label>
+          <input type="password" class="form-control" name="password" id="password" required>
+          <button class="btn btn-primary mt-2" id="loginButton">login</button>
+          <a href="" onclick="toggleRegister('register')">Register</a>
+
+        </form>
+      </div>
+    </div>
+  </div>
+  <div id="main" class="d-none">
+    <nav class="navbar navbar-light bg-light" style="border-radius: 15px;">
+      <div class="container-fluid">
+        <ul class="navbar-nav">
+          <li class="nav-item" style="display:-webkit-box;">
+            <a class="nav-link" style="cursor: pointer;margin-left:10%;" onclick="showContainer('dashboard')">Home</a>
+
+            <a class="nav-link" style="cursor: pointer;;margin-left:10%;"
+              onclick="showContainer('profileContainer')">Profile</a>
+            <a class="nav-link" style="cursor: pointer;margin-left:10%;"
+              onclick="showContainer('devicesFileContainer')">Devices</a>
+            <a class="nav-link" style="cursor: pointer;;margin-left:10%;" onclick="logout()">Logout</a>
+
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="fileContainer" id="dashboard">
+
+      <canvas id="devicesChart"></canvas>
+    </div>
+    <div class="fileContainer" id="profileContainer">
+
+      <label for="usernameView">Username:</label>
+      <input type="text" id="usernameView" class="form-control" disabled>
+    </div>
+    <div class="fileContainer" id="devicesFileContainer">
+  
+      <div id="moistureDisplay" class="row p-3"></div>
+  
+      Your devices:
+      <button id="addDevice" class="btn btn-primary roundButton">+</button>
+      <div id="devicesContainer" class="row p-3"></div>
+  
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="newDeviceModal" tabindex="-1" role="dialog" aria-labelledby="newDeviceModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="newDeviceModalLabel">New device</h5>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label for="deviceName">Device name</label>
+          <input class="form-control" id="newDeviceName" maxlength="50">
+          <label for="deviceName">Device id</label>
+          <input class="form-control" id="newDeviceId" maxlength="70">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="saveNewDevice">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+  integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+<script src="client.js"></script>
+<script src="global.js"></script>
+
+</html>
