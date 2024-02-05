@@ -12,10 +12,13 @@
   "dependencies": {
     "@serialport/parser-readline": "^12.0.0",
     "ajax": "^0.0.4",
+    "axios": "^1.6.7",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "bootstrap": "^5.3.2",
     "chart.js": "^4.4.1",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "chartjs-plugin-downsample": "^1.1.0",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
     "express-session": "^1.17.3",

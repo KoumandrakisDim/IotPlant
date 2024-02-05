@@ -60,10 +60,10 @@ port.on('data', (data) => {
 });
 
 // Handle errors that may occur during communication
-port.on('error', (err) => {
-    console.error('Error:', err.message);
-});
+// port.on('error', (err) => {
+//     console.error('Error:', err.message);
+// });
 
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Arduino sensor is running on port http://localhost:${PORT}`);
 });

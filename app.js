@@ -11,6 +11,7 @@ const { initializeApp } = require('./initializeApp');
 const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
 const { arduinoWebsocket } = require('./arduinoWebsocket');
+const { aiModel } = require('./aiModel/ai');
 
 const app = express();
 app.use(express.json());
@@ -60,7 +61,6 @@ db.once('open', () => {
 const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
-
 // Setup WebSocket
 // setupWebSocket(server);
 // initializeApp(app, db);

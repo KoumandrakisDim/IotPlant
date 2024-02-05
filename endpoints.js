@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const User = require('./models/user');
 const SensorData = require('./models/sensorData');
+const WeatherData = require('./models/weatherData');
+
 const Plant = mongoose.model('Plant', { user_id: String, device_id: String, status: String, name: String });
+const axios = require('axios');
 
 function endpoints(app) {
     app.post('/register', async (req, res) => {
@@ -22,8 +25,8 @@ function endpoints(app) {
             await user.save();
             console.log(user);
             // Create a plant device associated with the user
-            const plant = new Plant({ user_id: user._id, device_id, status: 'OK' });
-            await plant.save();
+            // const plant = new Plant({ user_id: user._id, device_id, status: 'OK' });
+            // await plant.save();
             return res.json({ userId: user._id, message: 'Login successful' });
         } catch (error) {
             console.error('Error during registration:', error);
@@ -45,7 +48,7 @@ function endpoints(app) {
                 console.log('User logged in:', user);
 
                 // You can also send the user's ID as part of the response if needed
-                return res.json({ userId: user._id, message: 'Login successful' });
+                return res.json({ userId: user._id, user: user, message: 'Login successful' });
             } else {
                 console.log('Invalid credentials for username:', username);
                 return res.status(401).send('Invalid username or password.');
@@ -140,20 +143,128 @@ function endpoints(app) {
         }
     });
 
+    app.post('/api/saveWeatherData', async (req, res) => {
+        const { data } = req.body;
+        console.log(data);
+
+        try {
+            // Save the weather data to the database
+            const weatherDataEntries = data.weatherData.map(entry => {
+                return {
+                    humidity: entry.humidity,
+                    temperature: entry.temp,
+                    wind_speed: entry.wind,
+                    city: data.city,
+                };
+            });
+
+            await WeatherData.insertMany(weatherDataEntries);
+
+            res.status(200).send('Data received and saved.');
+        } catch (error) {
+            console.error('Error saving weather data:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
+
     // Route to retrieve latest sensor data
     app.post('/api/getSensorData/:id', async (req, res) => {
         try {
-            // Retrieve the latest sensor data from the database
-            const latestData = await SensorData.find({device_id: req.params.id});
+            const deviceId = req.params.id;
+            const { timeWindow } = req.body; // Assuming the timeWindow parameter is passed in the request body
 
-            res.json(latestData);
+            let query = { device_id: deviceId };
+            // Adjust the query based on the timeWindow parameter
+            if (timeWindow === 'year') {
+                query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
+            } else if (timeWindow === 'month') {
+                query.timestamp = { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
+            } else if (timeWindow === 'week') {
+                query.timestamp = { $gte: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };
+            } else if (timeWindow === 'day') {
+                query.timestamp = { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) };
+            } else if (timeWindow === 'hour') {
+                query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
+            } else if (timeWindow === 'max') {
+                query.timestamp = {};
+            } else if (timeWindow === 'realTime') {
+                // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
+                const latestData = await SensorData.find({ device_id: deviceId })
+                    .sort({ timestamp: -1 }) // Descending order for most recent first
+                    .limit(50);
+
+                // Reverse the order in your application code
+                const reversedData = latestData.reverse();
+                return res.json(reversedData);
+            }
+
+            // For year, month, week, day, and hour, fetch data based on the specified time window
+            const sensorData = await SensorData.find(query);
+            res.json(sensorData);
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
             res.status(500).send('Internal Server Error');
         }
     });
 
-    
+    app.post('/getWeather', async (req, res) => {
+        console.log('getweather')
+        const { user } = req.body;
+        console.log(user)
+        let response;
+        try {
+
+            if (user.latitude && user.longitude) {
+                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${weatherApiKey}`);
+            }
+            else if (user.city) {
+                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${weatherApiKey}`);
+            }
+
+
+
+            res.json(response.data);
+        } catch (error) {
+            res.status(error.response.status).json(error.response.data);
+        }
+    });
+    //edit profile
+    app.post('/api/user/editProfile', async (req, res) => {
+        try {
+            const { data } = req.body;
+            console.log(data)
+            if (!data || !data.id || !data.username) {
+                return res.status(400).send('Invalid request body');
+            }
+
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: data.id }, // Query condition
+                { name: data.username, city: data.city, useWeather: data.useWeather }, // Update fields
+                { new: true } // Return the updated document
+            );
+
+            if (!updatedUser) {
+                return res.status(404).send('User not found');
+            }
+
+            res.status(200).send('Profile updated successfully.');
+        } catch (error) {
+            console.error('Error saving user data:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
+    app.post('/api/trainAIModel', async (req, res) => {
+        try {
+
+            trainModelAndSave();
+
+        } catch (error) {
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
 
 }
 module.exports = { endpoints };

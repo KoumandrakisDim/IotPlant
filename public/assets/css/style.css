@@ -1,0 +1,80 @@
+body {
+    background-color: #a4cf81;
+    background-image: url('../icons/logo.png');
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: cover;
+}
+
+#main {
+    padding: 10px;
+
+}
+
+.form {
+    background-color: #cccccc;
+    border-radius: 15px;
+    padding: 15px;
+}
+
+.card {
+    background-color: #cccccc;
+    border-radius: 15px;
+    padding: 15px;
+}
+
+.roundButton {
+    border-radius: 50%;
+    background-color: blue;
+    color: white;
+    font-size: 16px;
+}
+
+.alert {
+    opacity: 0;
+    transition: ease-in;
+    transition: opacity 0.3s;
+    position: absolute;
+    width: 98%;
+}
+
+.littleTrash {
+    width: 30;
+    position: absolute;
+    left: 92%;
+    cursor: pointer;
+}
+
+#devicesChart {
+    background-color: #f0f4e0;
+    
+}
+.chartContainer{
+    height: 440px;
+}
+.buttonContainer>* {
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
+.buttonContainer {
+    background-color: #a4cf83;
+}
+
+
+.weather-card{
+    background-color: #f0f4e0;
+}
+
+.marginChildren > *{
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 5px;
+}
+.weatherIcon{
+    width: 30%;
+}
+
+.chart{
+    max-height: 450px;
+}

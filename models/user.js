@@ -3,8 +3,14 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-  username: String,
-  password: String,
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+   password: String,
+  city: String,
+  useWeather: Boolean
 });
 
 // Add a static method to authenticate users
@@ -21,7 +27,7 @@ userSchema.statics.authenticate = async function (username, password) {
   return null;
 };
 
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
