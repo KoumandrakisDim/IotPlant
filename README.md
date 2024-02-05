@@ -8,12 +8,6 @@ IoT Plant Monitoring is a web application designed to monitor and optimize the h
 Features
 Real-Time Data Display: View live soil moisture data from sensors in real-time through an intuitive web interface.
 
-Smart Irrigation: Implement an AI-driven smart irrigation system that adapts watering schedules based on soil moisture levels, weather forecasts, and plant types.
-
-Predictive Analytics: Leverage machine learning algorithms to predict when the plant's moisture level will fall below a specified threshold, helping users take proactive measures.
-
-Weather Integration: Retrieve real-time weather data to enhance the accuracy of AI predictions and optimize watering decisions.
-
 User-Friendly Interface: Access the application through a user-friendly web interface for easy monitoring and control.
 
 Technologies Used
@@ -25,10 +19,7 @@ Weather API: Open-Meteo
 Getting Started
 Clone the Repository:
 
-bash
-Copy code
-git clone https://github.com/your-username/iot-plant-monitoring.git
-cd iot-plant-monitoring
+
 Install Dependencies:
 
 bash
