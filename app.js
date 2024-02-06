@@ -11,7 +11,7 @@ const { initializeApp } = require('./initializeApp');
 const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
 const { arduinoWebsocket } = require('./arduinoWebsocket');
-const { aiModel } = require('./aiModel/ai');
+// const { aiModel } = require('./aiModel/ai');
 
 const app = express();
 app.use(express.json());

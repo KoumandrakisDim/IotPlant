@@ -8,6 +8,13 @@ const WeatherData = require('./models/weatherData');
 const Plant = mongoose.model('Plant', { user_id: String, device_id: String, status: String, name: String });
 const axios = require('axios');
 
+const dotenv = require('dotenv');
+const result = dotenv.config();
+
+
+const weatherApiKey = process.env.API_KEY;
+
+
 function endpoints(app) {
     app.post('/register', async (req, res) => {
         const { username, password, device_id } = req.body;
@@ -214,7 +221,7 @@ function endpoints(app) {
         console.log(user)
         let response;
         try {
-
+            console.log(weatherApiKey)
             if (user.latitude && user.longitude) {
                 response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${weatherApiKey}`);
             }
@@ -264,6 +271,20 @@ function endpoints(app) {
             res.status(500).send('Internal Server Error');
         }
     });
+
+    app.post('/api/predictMoisture', async (req, res) => {
+        const { data } = req.body;
+
+        try {
+            console.log(data)
+            axios.post('http://localhost:5000/predict', {
+                input_data: data
+            })
+        } catch (error) {
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
 
 
 }

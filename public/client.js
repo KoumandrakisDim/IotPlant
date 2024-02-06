@@ -441,3 +441,22 @@ async function changeTimeWindow() {
 
   updateChart(data, timeWindow);
 }
+
+function predictMoisture(data){
+  return new Promise(function (resolve, reject) {
+    // Use jQuery's AJAX function
+    $.ajax({
+        url: `/api/predictMoisture`,
+        method: 'POST',
+        data: { data: data },
+        success: function (response) {
+            resolve(response);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            // Handle the error here
+            reject();
+            console.error('Error:', errorThrown);
+        }
+    });
+});
+}

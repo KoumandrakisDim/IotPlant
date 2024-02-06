@@ -101,7 +101,7 @@ class ProfileView {
             case 'broken clouds':
                 return scatteredCloudsIcon;
             case 'few clouds':
-                return 'assets/weatherIcons/cloudy.png';
+                return scatteredCloudsIcon;
             case 'clear sky':
                 return clearSkyIcon;
 
