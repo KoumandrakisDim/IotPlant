@@ -1,0 +1,130 @@
+[{
+  "_id": {
+    "$oid": "65c09be7ca064f886fc0d35e"
+  },
+  "temperature": 12.58,
+  "humidity": 54,
+  "wind_speed": 1.5,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-05T08:27:19.198Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c09be7ca064f886fc0d35f"
+  },
+  "temperature": 14.3,
+  "humidity": 48,
+  "wind_speed": 1.5,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-05T08:27:19.198Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c09be7ca064f886fc0d360"
+  },
+  "temperature": 15.09,
+  "humidity": 46,
+  "wind_speed": 1.5,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-05T08:27:19.199Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c09be7ca064f886fc0d361"
+  },
+  "temperature": 13.69,
+  "humidity": 48,
+  "wind_speed": 1.5,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-05T08:27:19.200Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c09be7ca064f886fc0d362"
+  },
+  "temperature": 12.33,
+  "humidity": 51,
+  "wind_speed": 1.5,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-05T08:27:19.200Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c1f4136f55f5c054002fe1"
+  },
+  "temperature": 15.11,
+  "humidity": 47,
+  "wind_speed": 1.5,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-06T08:55:47.081Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c1f4136f55f5c054002fe2"
+  },
+  "temperature": 16.36,
+  "humidity": 43,
+  "wind_speed": 1.61,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-06T08:55:47.081Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c1f4136f55f5c054002fe3"
+  },
+  "temperature": 16.4,
+  "humidity": 44,
+  "wind_speed": 1.33,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-06T08:55:47.081Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c1f4136f55f5c054002fe4"
+  },
+  "temperature": 13.34,
+  "humidity": 50,
+  "wind_speed": 1.44,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-06T08:55:47.082Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65c1f4136f55f5c054002fe5"
+  },
+  "temperature": 12.2,
+  "humidity": 52,
+  "wind_speed": 1.14,
+  "city": "Pylaía",
+  "timestamp": {
+    "$date": "2024-02-06T08:55:47.082Z"
+  },
+  "__v": 0
+}]

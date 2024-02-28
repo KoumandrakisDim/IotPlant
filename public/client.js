@@ -213,7 +213,7 @@ function loadChart(data) {
     graphData.push(deviceData.value);
     devices = data;
   })
-  console.log(labels)
+
   const ctx = document.getElementById('devicesChart');
   // const filteredData = graphData.filter((point, index) => index % n === 0);
   devicesChart = new Chart(ctx, {

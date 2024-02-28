@@ -10,12 +10,16 @@ const axios = require('axios');
 
 const dotenv = require('dotenv');
 const result = dotenv.config();
+const { PythonShell } = require('python-shell');
+const bodyParser = require('body-parser');
 
 
 const weatherApiKey = process.env.API_KEY;
+let lastMoistureValue = 0;
 
+async function endpoints(app) {
+    app.use(bodyParser.json());
 
-function endpoints(app) {
     app.post('/register', async (req, res) => {
         const { username, password, device_id } = req.body;
         console.log('register')
@@ -208,6 +212,11 @@ function endpoints(app) {
 
             // For year, month, week, day, and hour, fetch data based on the specified time window
             const sensorData = await SensorData.find(query);
+            console.log(sensorData)
+
+            lastMoistureValue = sensorData[49].value;
+            console.log(lastMoistureValue)
+
             res.json(sensorData);
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
@@ -215,27 +224,155 @@ function endpoints(app) {
         }
     });
 
+    // app.post('/getWeather', async (req, res) => {
+    //     console.log('getweather')
+    //     const { user } = req.body;
+
+    //     let response;
+    //     try {
+
+    //         if (user.latitude && user.longitude) {
+    //             response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${weatherApiKey}`);
+    //         }
+    //         else if (user.city) {
+    //             response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${weatherApiKey}`);
+    //         }
+
+    //         res.json(response.data);
+
+    //     } catch (error) {
+    //         console.log(error)
+    //         // res.status(error.response.status).json(error.response.data);
+    //     }
+    // });
     app.post('/getWeather', async (req, res) => {
         console.log('getweather')
         const { user } = req.body;
-        console.log(user)
+
         let response;
         try {
-            console.log(weatherApiKey)
+
             if (user.latitude && user.longitude) {
                 response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${weatherApiKey}`);
             }
             else if (user.city) {
+
                 response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${weatherApiKey}`);
             }
+            const data = response.data.list;
 
-
+            let filtered = filterWeatherVariables2(data);
 
             res.json(response.data);
+            // console.log(forecastData);
+            let lastMoistureValue = 70;
+            predictMoisture(filtered, lastMoistureValue);
+
+
         } catch (error) {
-            res.status(error.response.status).json(error.response.data);
+            console.log(error)
+            // res.status(error.response.status).json(error.response.data);
         }
     });
+    function filterWeatherTwoWeeks(data) {
+        const days = 14;
+
+        const twoWeeksForecast = data.list.filter(entry => {
+            const forecastDate = new Date(entry.dt * 1000); // Convert timestamp to date
+            const currentDate = new Date();
+            const twoWeeksLaterDate = new Date(currentDate);
+            twoWeeksLaterDate.setDate(twoWeeksLaterDate.getDate() + days); // Get date two weeks from now
+            return forecastDate <= twoWeeksLaterDate;
+        });
+
+        return twoWeeksForecast;
+    }
+    function filterWeatherVariables(data) {
+        let weather = { temp: [], wind: [], humidity: [] };
+        data.forEach(function (entry) {
+            weather.temp.push(entry.main.temp);
+            weather.wind.push(entry.wind.speed);
+            weather.humidity.push(entry.main.humidity);
+
+        })
+        return weather;
+    }
+    function filterWeatherVariables2(hourlyForecast) {
+        const dailyData = {};
+
+        hourlyForecast.forEach(hourlyData => {
+            const date = new Date(hourlyData.dt * 1000).toLocaleDateString('en-US');
+            if (!dailyData[date]) {
+                dailyData[date] = {
+                    temp: [],
+                    wind_speed: [],
+                    humidity: []
+                };
+            }
+            dailyData[date].temp.push(hourlyData.main.temp);
+            dailyData[date].wind_speed.push(hourlyData.wind.speed);
+            dailyData[date].humidity.push(hourlyData.main.humidity);
+        });
+
+        // Calculate average for each day
+        const forecastData = {
+            'Air temperature (C)': [],
+            'Wind speed (Km/h)': [],
+            'Air humidity (%)': []
+        };
+
+        for (const date in dailyData) {
+            if (dailyData.hasOwnProperty(date)) {
+                const tempSum = dailyData[date].temp.reduce((acc, curr) => acc + curr, 0);
+                const windSpeedSum = dailyData[date].wind_speed.reduce((acc, curr) => acc + curr, 0);
+                const humiditySum = dailyData[date].humidity.reduce((acc, curr) => acc + curr, 0);
+                const numDataPoints = dailyData[date].temp.length;
+                const avgTemp = tempSum / numDataPoints;
+                const avgWindSpeed = windSpeedSum / numDataPoints;
+                const avgHumidity = humiditySum / numDataPoints;
+
+                forecastData['Air temperature (C)'].push(avgTemp);
+                forecastData['Wind speed (Km/h)'].push(avgWindSpeed);
+                forecastData['Air humidity (%)'].push(avgHumidity);
+            }
+        }
+
+        return forecastData;
+    }
+
+    function getAverageWeather(data) {
+        const dailyWeather = {};
+
+        // Loop through each data entry and aggregate based on date
+        data.forEach(entry => {
+            const date = new Date(entry.dt_txt).toLocaleDateString('en-US', { weekday: 'long' });
+
+            if (!dailyWeather[date]) {
+                dailyWeather[date] = { temp: [], clouds: [], wind_speed: [] };
+            }
+
+            dailyWeather[date].temp.push(entry.main.temp);
+            dailyWeather[date].clouds.push(entry.clouds.all);
+            dailyWeather[date].wind_speed.push(entry.wind.speed);
+        });
+        console.log(dailyWeather)
+        // Calculate average weather for each day
+        const averageWeather = {};
+        for (const [date, weatherData] of Object.entries(dailyWeather)) {
+            const tempSum = weatherData.temp.reduce((acc, curr) => acc + curr, 0);
+            const cloudsSum = weatherData.clouds.reduce((acc, curr) => acc + curr, 0);
+            const windSpeedSum = weatherData.wind_speed.reduce((acc, curr) => acc + curr, 0);
+
+            averageWeather[date] = {
+                temp: tempSum / weatherData.temp.length,
+                clouds: cloudsSum / weatherData.clouds.length,
+                wind_speed: windSpeedSum / weatherData.wind_speed.length
+            };
+        }
+
+        return averageWeather;
+    }
+
     //edit profile
     app.post('/api/user/editProfile', async (req, res) => {
         try {
@@ -273,17 +410,70 @@ function endpoints(app) {
     });
 
     app.post('/api/predictMoisture', async (req, res) => {
-        const { data } = req.body;
-
         try {
-            console.log(data)
-            axios.post('http://localhost:5000/predict', {
-                input_data: data
-            })
+            // Extract data from request body
+            const { forecastData, initialSoilMoisture, modelPath } = req.body;
+
+            forecast_data = {
+                'Air temperature (C)': [25, 26, 27, 28, 29, 30, 31],
+                'Wind speed (Km/h)': [5, 6, 7, 8, 9, 10, 11],
+                'Air humidity (%)': [60, 62, 65, 63, 61, 59, 58]
+            }
+            initial_soil_moisture = 40
+            model_path = "super_ai.pkl"
+
+            // Predict soil moisture
+            const predictions = await predictSoilMoisture(forecastData, initialSoilMoisture, modelPath);
+
+            // Send predictions as response
+            res.status(200).json({ predictions });
         } catch (error) {
-            res.status(500).send('Internal Server Error');
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
         }
     });
+
+    async function predictSoilMoisture(forecastData, initialSoilMoisture, modelPath) {
+        return new Promise((resolve, reject) => {
+            const options = {
+                mode: 'text',
+                pythonOptions: ['-u'],
+                scriptPath: '',
+                args: [JSON.stringify(forecastData), initialSoilMoisture, modelPath]
+            };
+
+            PythonShell.run('predict3.py', options, (err, results) => {
+                if (err) {
+                    console.error('Error:', err);
+                    reject('Internal Server Error');
+                } else {
+                    const predictions = JSON.parse(results[0]);
+                    console.log(results)
+                    resolve(predictions);
+                }
+            });
+        });
+    }
+    /**
+     * 
+     * @param {*} forecastData 
+     * @param {*} initialSoilMoisture 
+     */
+    async function predictMoisture(forecastData, initialSoilMoisture) {
+
+        initialSoilMoisture = 80;
+
+        const modelPath = "super_ai.pkl";
+        const forecastDataString = JSON.stringify(forecastData);
+
+        const spawn = require("child_process").spawn;
+        const pythonProcess = spawn('python', ["predict3.py", forecastDataString, initialSoilMoisture, modelPath]);
+
+        pythonProcess.stdout.on('data', (data) => {
+            console.log('python response')
+            console.log(data.toString())
+        });
+    }
 
 
 

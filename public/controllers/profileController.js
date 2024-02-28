@@ -25,6 +25,7 @@ class ProfileController {
                 method: 'POST',
                 data: { user: user },
                 success: function (response) {
+                    console.log(response)
                     resolve(response);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
