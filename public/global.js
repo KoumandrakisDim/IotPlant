@@ -160,3 +160,53 @@ function saveDailyWeatherData(weatherData) {
     }
 }
 
+function filterWeatherVariables(hourlyForecast) {
+    const dailyData = {};
+
+    hourlyForecast.forEach(hourlyData => {
+        const date = new Date(hourlyData.dt * 1000).toLocaleDateString('en-US');
+        if (!dailyData[date]) {
+            dailyData[date] = {
+                temp: [],
+                wind_speed: [],
+                humidity: [],
+                description: [],
+                icon: []
+            };
+        }
+        dailyData[date].temp.push(hourlyData.main.temp);
+        dailyData[date].wind_speed.push(hourlyData.wind.speed);
+        dailyData[date].humidity.push(hourlyData.main.humidity);
+        dailyData[date].description.push(hourlyData.weather[0].description);
+        dailyData[date].icon.push(hourlyData.weather[0].icon);
+
+    });
+    
+    // Calculate average for each day
+    const forecastData = [];
+    
+    for (const date in dailyData) {
+        if (dailyData.hasOwnProperty(date)) {
+            const tempSum = dailyData[date].temp.reduce((acc, curr) => acc + curr, 0);
+            const windSpeedSum = dailyData[date].wind_speed.reduce((acc, curr) => acc + curr, 0);
+            const humiditySum = dailyData[date].humidity.reduce((acc, curr) => acc + curr, 0);
+            const numDataPoints = dailyData[date].temp.length;
+            const avgTemp = tempSum / numDataPoints;
+            const avgWindSpeed = windSpeedSum / numDataPoints;
+            const avgHumidity = humiditySum / numDataPoints;
+    
+            forecastData.push({
+                date: date,
+                temp: avgTemp,
+                windSpeed: avgWindSpeed,
+                humidity: avgHumidity,
+                description: dailyData[date].description,
+                icon: dailyData[date].icon
+
+            });
+        }
+    }
+    
+    return forecastData;
+    
+}

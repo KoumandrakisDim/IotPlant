@@ -36,14 +36,16 @@ class ProfileView {
     }
 
     addWeatherCards(data) {
-        console.log(data)
+
         const div = document.createElement('div');
         div.className = 'row p-3';
+        data = filterWeatherVariables(data.list);
+        console.log(data)
         // Assuming data.list is an array of forecast data
-        if (data.list && data.list.length > 0) {
+        if (data) {
             // Iterate over the first 7 items (assuming daily forecast data is available)
             for (let i = 0; i < 6; i++) {
-                const forecast = data.list[i];
+                const forecast = data[i];
                 const card = profileView.createWeatherCard(forecast);
                 div.appendChild(card);
             }
@@ -52,23 +54,24 @@ class ProfileView {
     }
 
     createWeatherCard(forecast) {
+        console.log(forecast)
         const card = document.createElement('div');
         card.classList.add('col-4', 'col-lg-2', 'p-2');
 
         // Extract relevant information from the forecast object
-        const date = new Date(forecast.dt * 1000); // Convert timestamp to date
-        const temperature = forecast.main.temp;
+        // const date = new Date(forecast.dt * 1000); // Convert timestamp to date
+        const temperature = forecast.temp;
         let iconUrl = profileView.getWeatherIconUrl(forecast);
         // Create HTML structure for the card
         card.innerHTML = `<div class="weather-card p-2">
-            <div class="card-header">${profileView.formatDate(date)}</div>
+            <div class="card-header">${forecast.date}</div>
             <div class="card-body">
-                <p> ${temperature} °C</p>
+                <p> ${Number(temperature.toFixed(2))} °C</p>
                 <div class='d-flex justify-content-center'>
                     <img class='weatherIcon' src=${iconUrl}>
                 </div>
-                <p> Humidity: ${forecast.main.humidity} %</p>
-                <p> Wind: ${forecast.wind.speed} km/h</p>
+                <p> Humidity: ${Number(forecast.humidity.toFixed(2))} %</p>
+                <p> Wind: ${Number(forecast.windSpeed.toFixed(2))} km/h</p>
             </div>
             </div>
         `;
@@ -77,20 +80,20 @@ class ProfileView {
     }
 
     getWeatherIconUrl(data) {
-        let description = data.weather[0].description;
-        let iconCode = data.weather[0].icon;
+        let description = data.description[0];
+        let iconCode = data.icon[0];
         let isDaytime = profileView.isDaytimeIcon(iconCode);
         let clearSkyIcon;
         let scatteredCloudsIcon;
 
-        if (isDaytime) {
+        // if (isDaytime) {
             clearSkyIcon = 'assets/weatherIcons/sun.png';
             scatteredCloudsIcon = 'assets/weatherIcons/day_partial_cloud.png';
-        } else {
-            clearSkyIcon = 'assets/weatherIcons/night_half_moon_clear.png';
-            scatteredCloudsIcon = 'assets/weatherIcons/night_full_moon_partial_cloud.png';
+        // } else {
+        //     clearSkyIcon = 'assets/weatherIcons/night_half_moon_clear.png';
+        //     scatteredCloudsIcon = 'assets/weatherIcons/night_full_moon_partial_cloud.png';
 
-        }
+        // }
 
         if (data) {
 
@@ -107,8 +110,11 @@ class ProfileView {
 
             case 'overcast clouds':
                 return 'assets/weatherIcons/cloudy.png';
+            case 'light rain':
+                return 'assets/weatherIcons/day_rain.png';
+
             default:
-                return 'no';
+                return clearSkyIcon;
         }
     }
     isDaytimeIcon(iconCode) {
@@ -144,6 +150,7 @@ class ProfileView {
         try {
             await profileController.saveProfile(data);
             showContainer('dashboard');
+            getPredictedMoisture();
         } catch {
             return;
         }

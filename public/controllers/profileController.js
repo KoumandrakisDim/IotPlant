@@ -36,4 +36,22 @@ class ProfileController {
             });
         });
     }
+    getPredictedMoisture() {
+        return new Promise(function (resolve, reject) {
+            // Use jQuery's AJAX function
+            $.ajax({
+                url: `/api/predictMoisture`,
+                method: 'GET',
+                success: function (response) {
+                    console.log(response)
+                    resolve(response);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    // Handle the error here
+                    reject();
+                    console.error('Error:', errorThrown);
+                }
+            });
+        });
+    }
 }

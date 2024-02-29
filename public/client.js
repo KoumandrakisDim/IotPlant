@@ -8,6 +8,8 @@ const targetPoints = 50;
 const socket = io('http://localhost:3001');
 var chartLoaded = false;
 let device = {};
+let predictedMoistureChart;
+let predictedMoistureChartLoaded = false;
 
 const profileController = new ProfileController();
 const profileView = new ProfileView();
@@ -30,6 +32,7 @@ function eventListeners() {
   for (const radio of timeWindowRadios) {
     radio.addEventListener('change', changeTimeWindow);
   }
+  document.getElementById('predictMoistureButton').addEventListener('click', getPredictedMoisture);
 
 }
 function login() {
@@ -48,7 +51,7 @@ function loginAjax(username, password) {
         userDevices.forEach(function (device) {
           document.getElementById('devicesContainer').appendChild(createDevicesList(device));
         })
-        getDeviceData(userDevices[0].device_id, 'realTime');
+        getDeviceData(userDevices[0].device_id, 'realTime', true);
         device = userDevices[0];
         showContainer('dashboard');
         document.getElementById('main').classList.remove('d-none');
@@ -77,7 +80,8 @@ async function fillUserProfileData(data) {
     let weatherData = await profileController.getWeatherData(profileView.user);
     $('#weatherContainer').html(null);
     document.getElementById('weatherContainer').appendChild(profileView.addWeatherCards(weatherData));
-    saveDailyWeatherData(weatherData)
+    saveDailyWeatherData(weatherData);
+    getPredictedMoisture();
   }
 }
 function logout() {
@@ -168,7 +172,7 @@ function getDevices(userId) {
  * @param {*} id 
  * @returns 
  */
-function getDeviceData(id, timeWindow) {
+function getDeviceData(id, timeWindow, isFirstCall) {
   if (!timeWindow) {
     timeWindow = 'realTime';
   }
@@ -177,7 +181,7 @@ function getDeviceData(id, timeWindow) {
     $.ajax({
       url: `/api/getSensorData/${id}`, // Adjust the URL to match your server route
       method: 'POST',
-      data: { timeWindow: timeWindow },
+      data: { timeWindow: timeWindow, isFirstCall: isFirstCall },
       success: function (response) {
         originalData = response;
         if (!chartLoaded) {
@@ -259,6 +263,114 @@ function loadChart(data) {
     },
   });
 
+
+}
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${day}-${month}-${year}`;
+}
+
+// Function to get the dates of the next 13 days
+function getNext13Days() {
+  const dates = [];
+  let currentDate = new Date();
+
+  for (let i = 0; i < 13; i++) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    dates.push(formatDate(currentDate));
+  }
+
+  return dates;
+}
+function filterArray(string) {
+  console.log(string)
+  const arrayRegex = /\[([\d.,\s]+)\]/;
+  const match = string.match(arrayRegex);
+  let array = [];
+
+  if (match && match[1]) {
+    const arrayString = match[1];
+    array = JSON.parse(`[${arrayString}]`);
+    console.log(array);
+  } else {
+    console.log("No array found in the data.");
+  }
+  return array;
+}
+function loadPredictedMoistureChart(data) {
+
+  // data = data.predictedMoisture;
+  let labels = [];
+  let graphData = [];
+  // let filteredData = filterSensorData(data);
+
+  // let array = filterArray(data);
+
+  // array.forEach(function (deviceData) {
+  //   labels.push(formatDateString(deviceData.timestamp));
+  //   graphData.push(deviceData.value);
+  //   devices = data;
+  // })
+  let dates = getNext13Days();
+
+  const ctx = document.getElementById('predictedMoistureChart');
+  // const filteredData = graphData.filter((point, index) => index % n === 0);
+
+  predictedMoistureChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      title: 'hi',
+      labels: dates, // Initial X-axis labels
+      datasets: [{
+        label: 'Predicted Moisture',
+        // data: array, // Initial moisture values
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      scales: {
+        x: {
+          display: true,
+          ticks: {
+            stepSize: 10 // Adjust the limit as needed
+          }
+        },
+        y: {
+          min: 0,    // Set the minimum value for the Y-axis
+          max: 101,  // Set the maximum value for the Y-axis
+          ticks: {
+            stepSize: 1  // Set the step size between ticks (optional)
+          },
+          title: {
+            display: true,
+            text: 'Moisture Level',
+          },
+        },
+      },
+      animation: {
+        duration: 1000, // Set animation duration to 0 for no animation
+      },
+      animations: {
+        tension: {
+          duration: 1000,
+          easing: 'linear',
+        }
+      },
+    },
+  });
+  $('#predictionChartLoadingIcon').hide();
+
+
+}
+function updatePredictionChart(data) {
+  console.log(data)
+  data = filterArray(data.predictedMoisture);
+
+  predictedMoistureChart.data.datasets[0].data = data;
+  predictedMoistureChart.update();
+  $('#predictionChartLoadingIcon').hide();
 
 }
 function filterSensorData(data) {
@@ -442,21 +554,40 @@ async function changeTimeWindow() {
   updateChart(data, timeWindow);
 }
 
-function predictMoisture(data){
+function predictMoisture(data) {
   return new Promise(function (resolve, reject) {
     // Use jQuery's AJAX function
     $.ajax({
-        url: `/api/predictMoisture`,
-        method: 'POST',
-        data: { data: data },
-        success: function (response) {
-            resolve(response);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            // Handle the error here
-            reject();
-            console.error('Error:', errorThrown);
-        }
+      url: `/api/predictMoisture`,
+      method: 'POST',
+      data: { data: data },
+      success: function (response) {
+        resolve(response);
+      },
+      error: function (jqXHR, textStatus, errorThrown) {
+        // Handle the error here
+        reject();
+        console.error('Error:', errorThrown);
+      }
     });
-});
+  });
 }
+
+async function getPredictedMoisture() {
+  $('#predictionChartLoadingIcon').show();
+  let predictedMoisture = await profileController.getPredictedMoisture();
+  // if(predictedMoistureChart){
+  //   predictedMoistureChart.destroy();
+  // }
+  // loadPredictedMoistureChart(predictedMoisture);
+
+  // if (!predictedMoistureChartLoaded) {
+  //   loadPredictedMoistureChart(predictedMoisture);
+  //   predictedMoistureChartLoaded = true;
+
+  // } else {
+    updatePredictionChart(predictedMoisture);
+  // }
+
+}
+loadPredictedMoistureChart();
