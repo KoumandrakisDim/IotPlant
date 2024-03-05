@@ -1,0 +1,23 @@
+{
+    "2024-02-03": {
+        "soil_moisture": 70.35091851154027,
+        "temperature": 50.58,
+        "humidity": 40.0,
+        "wind_speed": 1.44,
+        "evapotranspiration": 2.642585178206943
+    },
+    "2024-02-04": {
+        "soil_moisture": 81.70833333333333,
+        "temperature": 14.3,
+        "humidity": 70.0,
+        "wind_speed": 1.44,
+        "evapotranspiration": 1.642585178206943
+    },
+    "2024-02-05": {
+        "soil_moisture": 75.18639262934089,
+        "temperature": 20.703333333333333,
+        "humidity": 80.333333333333336,
+        "wind_speed": 1.4400000000000002,
+        "evapotranspiration": 1.221940703992442
+    }
+}
