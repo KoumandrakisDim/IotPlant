@@ -23,32 +23,35 @@ def predict_soil_moisture(forecast_data, current_soil_moisture, model_path):
         moistureArray.append(current_soil_moisture)
         # Append prediction to the list
         predictions.append(evapotranspiration_pred)
+    print(predictions)
 
-    
     return moistureArray
 
 if __name__ == "__main__":
 
-    # forecast_data = {
-    #     'Air temperature (C)': [ 19.8825, 21.09625, 23.82625, 24.73625, 25.81875, 25.0925 ],
-    #     'Wind speed (Km/h)': [
-    #         1.865,
-    #         4.31625,
-    #         4.648750000000001,
-    #         4.235,
-    #         2.8587500000000006,
-    #         4.2425
-    #     ],
-    #     'Air humidity (%)': [ 47, 53.75, 50.125, 61.5, 80.5, 83.75 ]
-    #         }
-    # initial_soil_moisture = 20
+    forecast_data = {
+  'Air temperature (C)': [
+    52.28,
+    -1.0225,
+    -1.4075000000000002,
+    -0.8587499999999999,
+    0.175,
+    -50.984
+  ],
+  'Wind speed (Km/h)': [
+    3.36,
+    1.9200000000000002,
+    1.3875,
+    1.485,
+    1.9824999999999997,
+    2.978
+  ],
+  'Air humidity (%)': [ 83.33333333333333, 89.5, 91.25, 90.625, 88.5, 82 ]
+}
+    initial_soil_moisture = 80
     
-    # model_path = "super_ai2.pkl"
+    model_path = "super_ai2.pkl"
 
-    forecast_data = json.loads(sys.argv[1])
-    initial_soil_moisture = float(sys.argv[2])
-    model_path = sys.argv[3]
-    
     # Predict soil moisture for the next 14 days
     predictions = predict_soil_moisture(forecast_data, initial_soil_moisture, model_path)
     print(json.dumps(predictions))

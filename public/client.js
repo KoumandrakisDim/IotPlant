@@ -277,27 +277,12 @@ function getNext13Days() {
   const dates = [];
   let currentDate = new Date();
 
-  for (let i = 0; i < 13; i++) {
+  for (let i = 0; i < 6; i++) {
     currentDate.setDate(currentDate.getDate() + 1);
     dates.push(formatDate(currentDate));
   }
 
   return dates;
-}
-function filterArray(string) {
-  console.log(string)
-  const arrayRegex = /\[([\d.,\s]+)\]/;
-  const match = string.match(arrayRegex);
-  let array = [];
-
-  if (match && match[1]) {
-    const arrayString = match[1];
-    array = JSON.parse(`[${arrayString}]`);
-    console.log(array);
-  } else {
-    console.log("No array found in the data.");
-  }
-  return array;
 }
 function loadPredictedMoistureChart(data) {
 
@@ -366,9 +351,20 @@ function loadPredictedMoistureChart(data) {
 }
 function updatePredictionChart(data) {
   console.log(data)
-  data = filterArray(data.predictedMoisture);
+  // data = filterArray(data.predictedMoisture);
+  // Remove newline characters
+  const cleanedDataString = data.predictedMoisture.replace(/\r?\n|\r/g, '');
 
-  predictedMoistureChart.data.datasets[0].data = data;
+  // Parse the string into an object
+  const dataObject = JSON.parse(cleanedDataString);
+
+  console.log(cleanedDataString)
+  console.log(dataObject)
+
+  // Extract the predictedMoisture array
+  // const predictedMoistureArray = JSON.parse(dataObject);
+
+  predictedMoistureChart.data.datasets[0].data = dataObject;
   predictedMoistureChart.update();
   $('#predictionChartLoadingIcon').hide();
 
@@ -575,7 +571,11 @@ function predictMoisture(data) {
 
 async function getPredictedMoisture() {
   $('#predictionChartLoadingIcon').show();
+  predictedMoistureChart.data.datasets[0].data = [];
+  predictedMoistureChart.update();
+
   let predictedMoisture = await profileController.getPredictedMoisture();
+  console.log(predictedMoisture)
   // if(predictedMoistureChart){
   //   predictedMoistureChart.destroy();
   // }
@@ -586,7 +586,7 @@ async function getPredictedMoisture() {
   //   predictedMoistureChartLoaded = true;
 
   // } else {
-    updatePredictionChart(predictedMoisture);
+  updatePredictionChart(predictedMoisture);
   // }
 
 }

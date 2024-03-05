@@ -45,18 +45,18 @@ def predict_soil_moisture(forecast_data, initial_soil_moisture, model_path):
 
 if __name__ == "__main__":
 
-    # forecast_data = {
-    #     'Air temperature (C)': [25, 26, 27, 28, 29, 30, 31],
-    #     'Wind speed (Km/h)': [5, 6, 7, 8, 9, 10, 11],
-    #     'Air humidity (%)': [60, 62, 65, 63, 61, 59, 58]
-    # }
-    # initial_soil_moisture = 90
+    forecast_data = {
+        'Air temperature (C)': [25, 26, 27, 28, 29, 30, 31],
+        'Wind speed (Km/h)': [5, 6, 7, 8, 9, 10, 11],
+        'Air humidity (%)': [60, 62, 65, 63, 61, 59, 58]
+    }
+    initial_soil_moisture = 90
     
-    # model_path = "super_ai.pkl"
+    model_path = "super_ai.pkl"
 
-    forecast_data = json.loads(sys.argv[1])
-    initial_soil_moisture = float(sys.argv[2])
-    model_path = sys.argv[3]
+    # forecast_data = json.loads(sys.argv[1])
+    # initial_soil_moisture = float(sys.argv[2])
+    # model_path = sys.argv[3]
     
     # Predict soil moisture for the next 14 days
     predictions = predict_soil_moisture(forecast_data, initial_soil_moisture, model_path)

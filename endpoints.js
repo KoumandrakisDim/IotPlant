@@ -12,7 +12,6 @@ const dotenv = require('dotenv');
 const result = dotenv.config();
 const { PythonShell } = require('python-shell');
 const bodyParser = require('body-parser');
-const modelPath = "super_ai.pkl";
 
 
 const weatherApiKey = process.env.API_KEY;
@@ -258,6 +257,19 @@ async function endpoints(app) {
         }
     });
 
+    app.post('/sensorData', async (req, res) => {
+        const { user } = req.body;
+
+        let response;
+        try {
+            console.log(response)
+            res.json(response.data);
+
+        } catch (error) {
+            console.log(error)
+        }
+    });
+
     function filterWeatherVariables2(hourlyForecast) {
         const dailyData = {};
 
@@ -362,11 +374,14 @@ async function endpoints(app) {
      */
     async function predictMoisture(forecastData, initialSoilMoisture) {
 
+        console.log(forecastData)
+        console.log(initialSoilMoisture)
+        const modelPath = "super_ai3.pkl";
 
         const forecastDataString = JSON.stringify(forecastData);
 
         const spawn = require("child_process").spawn;
-        const pythonProcess = spawn('python', ["predict3.py", forecastDataString, initialSoilMoisture, modelPath]);
+        const pythonProcess = spawn('python', ["predict4.py", forecastDataString, initialSoilMoisture, modelPath]);
         return new Promise(function (resolve, reject) {
 
             pythonProcess.stdout.on('data', (data) => {

@@ -19,5 +19,12 @@
         "humidity": 80.333333333333336,
         "wind_speed": 1.4400000000000002,
         "evapotranspiration": 1.221940703992442
+    },
+    "2024-02-02": {
+        "soil_moisture": 50.18639262934089,
+        "temperature": 20.703333333333333,
+        "humidity": 80.333333333333336,
+        "wind_speed": 1.4400000000000002,
+        "evapotranspiration": 0.621940703992442
     }
 }
