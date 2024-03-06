@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const path = require('path');
 const ejs = require('ejs');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlant';
 

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const User = require('./models/user');
 const SensorData = require('./models/sensorData');
 const WeatherData = require('./models/weatherData');
