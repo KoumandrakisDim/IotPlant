@@ -18,7 +18,7 @@ app.use(express.json());
 
 const arduinoCommunication = require('./arduinoData');
 
-const port = 3000;
+const port = process.env.PORT;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 

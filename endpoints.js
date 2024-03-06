@@ -14,7 +14,7 @@ const { PythonShell } = require('python-shell');
 const bodyParser = require('body-parser');
 
 
-const weatherApiKey = process.env.API_KEY;
+const weatherApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
 let lastMoistureValue = 0;
 var filteredWeatherData = [];
 
