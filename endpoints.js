@@ -18,12 +18,17 @@ const weatherApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
 let lastMoistureValue = 0;
 var filteredWeatherData = [];
 
+console.log('database url')
+console.log(process.env.MONGODB_URI)
+
 async function endpoints(app) {
     app.use(bodyParser.json());
 
     app.post('/register', async (req, res) => {
         const { username, password, device_id } = req.body;
         console.log('register')
+        console.log(process.env.MONGODB_URI)
+
         if (!username || !password || !device_id) {
             return res.status(400).send('Username, password, and device ID are required.');
         }
