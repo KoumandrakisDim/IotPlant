@@ -35,10 +35,6 @@ async function endpoints(app) {
             // Create a user
             const user = new User(userObject);
             await user.save();
-            console.log(user);
-            // Create a plant device associated with the user
-            // const plant = new Plant({ user_id: user._id, device_id, status: 'OK' });
-            // await plant.save();
             return res.json({ userId: user._id, message: 'Login successful' });
         } catch (error) {
             console.error('Error during registration:', error);

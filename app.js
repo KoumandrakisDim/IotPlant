@@ -7,7 +7,7 @@ const ejs = require('ejs');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlant';
-
+console.log(process.env.MONGODB_URI)
 const { initializeApp } = require('./initializeApp');
 const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
