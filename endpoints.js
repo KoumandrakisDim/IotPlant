@@ -262,9 +262,10 @@ async function endpoints(app) {
         const { sensorData } = req.body;
 
         let responseData = 'ok'; // Assuming you have some data to send back
+        console.log(req.body);
 
         try {
-            const sensorData = new SensorData({ device_id: 'g', value: sensorData });
+            const sensorData = new SensorData({ device_id: 'g', value: req.body });
 
             // Save the sensor data to the database
             sensorData.save()
