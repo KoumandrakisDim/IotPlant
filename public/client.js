@@ -5,7 +5,7 @@ let devices = [];
 let devicesChart;
 let originalData = []; // Your initial data
 const targetPoints = 50;
-const socket = io('http://localhost:3001');
+// const socket = io('http://localhost:3001');
 var chartLoaded = false;
 let device = {};
 let predictedMoistureChart;
@@ -392,7 +392,7 @@ function enableDataTransmission() {
 function disableDataTransmission() {
 
   // Remove the 'moistureUpdate' event listener
-  socket.off('moistureUpdate');
+  // socket.off('moistureUpdate');
 }
 
 function deleteDevice(id) {
