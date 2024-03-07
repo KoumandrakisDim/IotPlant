@@ -265,7 +265,7 @@ async function endpoints(app) {
         console.log(req.body);
 
         try {
-            const sensorData = new SensorData({ device_id: 'g', value: req.body });
+            const sensorData = new SensorData({ device_id: 'g', value: req.body.value });
 
             // Save the sensor data to the database
             sensorData.save()
