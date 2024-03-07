@@ -51,8 +51,11 @@ function loginAjax(username, password) {
         userDevices.forEach(function (device) {
           document.getElementById('devicesContainer').appendChild(createDevicesList(device));
         })
-        getDeviceData(userDevices[0].device_id, 'realTime', true);
-        device = userDevices[0];
+        if (userDevices[0]) {
+          getDeviceData(userDevices[0].device_id, 'realTime', true);
+          device = userDevices[0];
+        }
+
         showContainer('dashboard');
         document.getElementById('main').classList.remove('d-none');
         $('#loginContainer').hide();
@@ -381,10 +384,10 @@ function filterSensorData(data) {
 }
 function enableDataTransmission() {
   // Listen for 'moistureUpdate' events from the server
-  socket.on('moistureUpdate', (moistureData) => {
-    // Assuming devicesChart is already initialized
-    addRealTimeDataToChart(moistureData);
-  });
+  // socket.on('moistureUpdate', (moistureData) => {
+  //   // Assuming devicesChart is already initialized
+  //   addRealTimeDataToChart(moistureData);
+  // });
 }
 function disableDataTransmission() {
 

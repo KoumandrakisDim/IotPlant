@@ -7,8 +7,8 @@ const ejs = require('ejs');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlant';
-const { initializeApp } = require('./initializeApp');
-const { setupWebSocket } = require('./setupWebsocket');
+
+// const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
 const { arduinoWebsocket } = require('./arduinoWebsocket');
 // const { aiModel } = require('./aiModel/ai');
@@ -29,7 +29,7 @@ app.use(session({
 }));
 app.use(express.json());
 
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoURI)
     .then(() => {
         console.log('Connected to MongoDB');
     })
@@ -40,16 +40,6 @@ const db = mongoose.connection;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
-cron.schedule('*/5 * * * * *', () => {
-    Plant.find({}, (err, plants) => {
-        if (err) throw err;
-
-        plants.forEach((plant) => {
-            checkHumidity(plant);
-        });
-    });
-});
 
 app.get('/', (req, res) => {
     res.render('index');

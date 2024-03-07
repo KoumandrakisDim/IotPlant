@@ -212,7 +212,7 @@ async function endpoints(app) {
 
                 if (isFirstCall) {
                     // For year, month, week, day, and hour, fetch data based on the specified time window
-    
+
                     lastMoistureValue = latestData[0].value;
                     console.log(lastMoistureValue)
                 }
@@ -259,15 +259,29 @@ async function endpoints(app) {
     });
 
     app.post('/sensorData', async (req, res) => {
-        const { user } = req.body;
+        const { sensorData } = req.body;
 
-        let response;
+        let responseData = 'ok'; // Assuming you have some data to send back
+
         try {
-            console.log(response)
-            res.json(response.data);
+            const sensorData = new SensorData({ device_id: 'g', value: sensorData });
 
+            // Save the sensor data to the database
+            sensorData.save()
+                .then(() => {
+                    // console.log('Sensor data saved to the database');
+                })
+                .catch((error) => {
+                    console.error('Error saving sensor data to the database:', error);
+                });
+            // Process the request and generate the response data
+
+            // Send the response data back to the client
+            res.json(responseData);
         } catch (error) {
-            console.log(error)
+            // Handle any errors that occurred during processing
+            console.error('Error processing request:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
         }
     });
 
@@ -350,6 +364,17 @@ async function endpoints(app) {
         }
     });
 
+    app.get('/testConnectivity', async (req, res) => {
+        try {
+
+            // Send predictions as response
+            res.status(200).json({status: 'Ok'});
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+
     app.get('/api/predictMoisture', async (req, res) => {
         try {
             // Extract data from request body
@@ -367,7 +392,7 @@ async function endpoints(app) {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     });
-    
+
     /**
      * 
      * @param {*} forecastData 
