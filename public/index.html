@@ -71,7 +71,7 @@
               onclick="showContainer('profileContainer')">Profile</a>
             <a class="nav-link" style="cursor: pointer;margin-left:10%;"
               onclick="showContainer('devicesFileContainer')">Devices</a>
-            <a class="nav-link" style="cursor: pointer;;margin-left:10%;" onclick="logout()">Logout</a>
+            <a class="nav-link" style="cursor: pointer;;margin-left:10%;" onclick="profileController.logout()">Logout</a>
 
           </li>
         </ul>
@@ -121,14 +121,17 @@
           </label>
         </div>
       </div>
-      <button class="btn btn-secondary roundButton mt-2" id="predictMoistureButton"><i
-          class="bi bi-bootstrap-reboot d-block"></i></button>
-      <div>
-        <canvas class="mt-2 chart" id="predictedMoistureChart"></canvas>
-        <div class="spinner-border" role="status" id="predictionChartLoadingIcon">
-        </div>
+      <div id="predictionDiv">
+        <button class="btn btn-secondary roundButton mt-2" id="predictMoistureButton"><i
+            class="bi bi-bootstrap-reboot d-block"></i></button>
+        <div>
+          <canvas class="mt-2 chart" id="predictedMoistureChart"></canvas>
+          <div class="spinner-border" role="status" id="predictionChartLoadingIcon">
+          </div>
 
+        </div>
       </div>
+
     </div>
     <div class="fileContainer" id="profileContainer">
       <div class="row">
@@ -211,6 +214,7 @@
   integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
 <script src="./controllers/profileController.js"></script>
+<script src="./controllers/sensorController.js"></script>
 
 <script src="userProfile.js"></script>
 <script src="client.js"></script>

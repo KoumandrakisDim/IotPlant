@@ -13,18 +13,16 @@ const axios = require('axios');
 // const { PythonShell } = require('python-shell');
 const bodyParser = require('body-parser');
 
-
-const weatherApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
 let lastMoistureValue = 0;
 var filteredWeatherData = [];
 
 async function endpoints(app) {
+    // const weatherApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
+
     app.use(bodyParser.json());
 
     app.post('/register', async (req, res) => {
         const { username, password, device_id } = req.body;
-        console.log('register')
-        console.log(process.env.MONGODB_URI)
 
         if (!username || !password || !device_id) {
             return res.status(400).send('Username, password, and device ID are required.');
@@ -32,7 +30,7 @@ async function endpoints(app) {
 
         try {
             const hashedPassword = await bcrypt.hash(password, 5);
-            console.log(hashedPassword);
+
             const userObject = { username: username, password: hashedPassword };
             // Create a user
             const user = new User(userObject);
@@ -55,8 +53,8 @@ async function endpoints(app) {
 
             if (user && await user.comparePassword(password)) {
                 req.session.user = user; // Store user information in the session
-                console.log('User logged in:', user);
 
+                
                 // You can also send the user's ID as part of the response if needed
                 return res.json({ userId: user._id, user: user, message: 'Login successful', port: process.env.PORT || 3000 });
             } else {
@@ -154,7 +152,6 @@ async function endpoints(app) {
 
     app.post('/api/saveWeatherData', async (req, res) => {
         const { data } = req.body;
-        console.log(data);
 
         try {
             // Save the weather data to the database
@@ -182,7 +179,7 @@ async function endpoints(app) {
         try {
             const deviceId = req.params.id;
             const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
-            console.log(isFirstCall)
+
             let query = { device_id: deviceId };
             // Adjust the query based on the timeWindow parameter
             if (timeWindow === 'year') {
@@ -206,12 +203,7 @@ async function endpoints(app) {
                 // Reverse the order in your application code
                 const reversedData = latestData.reverse();
 
-                if (isFirstCall) {
-                    // For year, month, week, day, and hour, fetch data based on the specified time window
-
-                    lastMoistureValue = latestData[0].value;
-                    console.log(lastMoistureValue)
-                }
+                lastMoistureValue = latestData[0].value;
 
                 return res.json(reversedData);
             }
@@ -228,18 +220,18 @@ async function endpoints(app) {
     });
 
     app.post('/getWeather', async (req, res) => {
-        console.log('getweather')
+
         const { user } = req.body;
 
         let response;
         try {
 
             if (user.latitude && user.longitude) {
-                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${weatherApiKey}`);
+                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
             }
             else if (user.city) {
 
-                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${weatherApiKey}`);
+                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
             }
             const data = response.data.list;
             filteredWeatherData = filterWeatherVariables2(data);
@@ -258,7 +250,6 @@ async function endpoints(app) {
         const { sensorData } = req.body;
 
         let responseData = 'ok'; // Assuming you have some data to send back
-        console.log(req.body);
 
         try {
             const sensorData = new SensorData({ device_id: 'g', value: req.body.value });
@@ -329,7 +320,7 @@ async function endpoints(app) {
     app.post('/api/user/editProfile', async (req, res) => {
         try {
             const { data } = req.body;
-            console.log(data)
+
             if (!data || !data.id || !data.username) {
                 return res.status(400).send('Invalid request body');
             }
@@ -365,7 +356,7 @@ async function endpoints(app) {
         try {
 
             // Send predictions as response
-            res.status(200).json({status: 'Ok'});
+            res.status(200).json({ status: 'Ok' });
         } catch (error) {
             console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -374,12 +365,7 @@ async function endpoints(app) {
 
     app.get('/api/predictMoisture', async (req, res) => {
         try {
-            // Extract data from request body
 
-            // Predict soil moisture
-
-
-            // console.log(forecastData);
             let predictedMoisture = await predictMoisture(filteredWeatherData, lastMoistureValue);
 
             // Send predictions as response
@@ -397,8 +383,6 @@ async function endpoints(app) {
      */
     async function predictMoisture(forecastData, initialSoilMoisture) {
 
-        console.log(forecastData)
-        console.log(initialSoilMoisture)
         const modelPath = "super_ai3.pkl";
 
         const forecastDataString = JSON.stringify(forecastData);

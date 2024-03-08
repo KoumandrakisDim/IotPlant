@@ -12,6 +12,8 @@ let device = {};
 let predictedMoistureChart;
 let predictedMoistureChartLoaded = false;
 
+const sensorController = new SensorController();
+
 const profileController = new ProfileController();
 const profileView = new ProfileView();
 let fetchDataInterval;
@@ -39,15 +41,16 @@ function eventListeners() {
 }
 async function login() {
   let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
-  console.log(response)
+
   userId = response.userId;
   let userDevices = await getDevices(userId);
   userDevices.forEach(function (device) {
     document.getElementById('devicesContainer').appendChild(createDevicesList(device));
   })
   if (userDevices[0]) {
-    getDeviceData(userDevices[0].device_id, 'realTime', true);
+    // sensorController.getDeviceData(userDevices[0].device_id, 'realTime', true);
     device = userDevices[0];
+    changeTimeWindow(device.device_id, 'realTime');
   }
 
   showContainer('dashboard');
@@ -67,28 +70,19 @@ async function fillUserProfileData(data) {
   document.getElementById('useWeatherButton').checked = data.useWeather;
   profileView.toggleUseWeatherButton();
   document.getElementById('realTimeTimeWindow').checked = true;
+
+  console.log(data)
+
   if (data.useWeather) {
+    $('#predictionDiv').show();
     let weatherData = await profileController.getWeatherData(profileView.user);
     $('#weatherContainer').html(null);
     document.getElementById('weatherContainer').appendChild(profileView.addWeatherCards(weatherData));
     saveDailyWeatherData(weatherData);
     getPredictedMoisture();
+  }else{
+    $('#predictionDiv').hide();
   }
-}
-function logout() {
-  $.ajax({
-    url: '/logout',
-    method: 'GET',
-    success: function (response) {
-      console.log('Logged out successfully');
-      document.getElementById('loginContainer').style.display = 'block';
-      document.getElementById('main').classList.add('d-none');
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.error('Error during logout:', errorThrown);
-      // Handle the error if needed
-    }
-  });
 }
 
 function register() {
@@ -158,49 +152,9 @@ function getDevices(userId) {
 
   });
 }
-/**
- * 
- * @param {*} id 
- * @returns 
- */
-function getDeviceData(id, timeWindow, isFirstCall) {
-  if (!timeWindow) {
-    timeWindow = 'realTime';
-  }
-  return new Promise(function (resolve, reject) {
-    // Use jQuery's AJAX function
-    $.ajax({
-      url: `/api/getSensorData/${id}`, // Adjust the URL to match your server route
-      method: 'POST',
-      data: { timeWindow: timeWindow, isFirstCall: isFirstCall },
-      success: function (response) {
-        originalData = response;
-        if (!chartLoaded) {
-          loadChart(response);
-          chartLoaded = true;
-        }
-        if (timeWindow === 'realTime') {
-          enableDataTransmission();
-          fetchDataInterval = setInterval(changeTimeWindow, 10000);
 
-        } else {
-          console.log(timeWindow)
-          disableDataTransmission();
-          clearInterval(fetchDataInterval);
-
-        }
-        resolve(response);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        // Reject the promise with an error message
-        reject(errorThrown);
-      }
-    });
-
-  });
-}
 // function fetchSensorData(){
-  
+
 // }
 /**
  * 
@@ -541,12 +495,32 @@ function processMoistureData(chart, moistureData) {
   // Return the updated labels and data
   return { labels, data };
 }
+/**
+ * 
+ * @param {*} device_id 
+ * @param {*} timeWindow 
+ */
+async function changeTimeWindow(device_id, timeWindow) {
+  if(!timeWindow){
+    timeWindow = getSelectedValueRadio('timeWindowRadio');
 
-async function changeTimeWindow() {
-  let timeWindow = getSelectedValueRadio('timeWindowRadio');
-  let data = await getDeviceData(device.device_id, timeWindow);
+  }
+  let response = await sensorController.getDeviceData(device.device_id, timeWindow);
+  originalData = response;
+  if (!chartLoaded) {
+    loadChart(response);
+    chartLoaded = true;
+  }
+  if (timeWindow === 'realTime') {
+    if (!fetchDataInterval) {
+      fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 5000);
+    }
 
-  updateChart(data, timeWindow);
+  } else {
+    clearInterval(fetchDataInterval);
+    fetchDataInterval = null;
+  }
+  updateChart(response, timeWindow);
 }
 
 function predictMoisture(data) {

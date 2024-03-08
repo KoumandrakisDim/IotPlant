@@ -74,4 +74,21 @@ class ProfileController {
           });
         });
       }
+
+      logout() {
+        clearInterval(fetchDataInterval);
+        $.ajax({
+          url: '/logout',
+          method: 'GET',
+          success: function (response) {
+            console.log('Logged out successfully');
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('main').classList.add('d-none');
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            console.error('Error during logout:', errorThrown);
+            // Handle the error if needed
+          }
+        });
+      }
 }

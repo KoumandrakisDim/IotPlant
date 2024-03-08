@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlant';
 const cors = require('cors');
 const socketIo = require('socket.io');
+require('dotenv').config();
 
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
