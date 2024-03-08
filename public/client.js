@@ -5,7 +5,7 @@ let devices = [];
 let devicesChart;
 let originalData = []; // Your initial data
 const targetPoints = 50;
-let socket;
+// let socket;
 
 var chartLoaded = false;
 let device = {};
@@ -57,7 +57,7 @@ async function login() {
 
 
   fillUserProfileData(response.user);
-  socket = io('http://localhost:' + response.port);
+  // socket = io('http://localhost:' + response.port);
 
 }
 
@@ -380,15 +380,15 @@ function filterSensorData(data) {
 }
 function enableDataTransmission() {
   // Listen for 'moistureUpdate' events from the server
-  socket.on('moistureUpdate', (moistureData) => {
-    // Assuming devicesChart is already initialized
-    addRealTimeDataToChart(moistureData);
-  });
+  // socket.on('moistureUpdate', (moistureData) => {
+  //   // Assuming devicesChart is already initialized
+  //   addRealTimeDataToChart(moistureData);
+  // });
 }
 function disableDataTransmission() {
 
   // Remove the 'moistureUpdate' event listener
-  socket.off('moistureUpdate');
+  // socket.off('moistureUpdate');
 }
 
 function deleteDevice(id) {
