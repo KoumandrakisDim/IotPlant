@@ -91,4 +91,22 @@ class ProfileController {
           }
         });
       }
+
+      registerAjax(username, password, deviceId) {
+        return new Promise(function (resolve, reject) {
+          // Use jQuery's AJAX function
+          $.ajax({
+            url: '/register',
+            method: 'POST',
+            data: { username: username, password: password, device_id: deviceId },
+            success: function (response) {      
+              resolve(response);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              // Reject the promise with an error message
+              reject(errorThrown);
+            }
+          });
+        });
+      }
 }

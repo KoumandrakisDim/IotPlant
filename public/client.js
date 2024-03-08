@@ -13,7 +13,7 @@ let predictedMoistureChart;
 let predictedMoistureChartLoaded = false;
 
 const sensorController = new SensorController();
-
+const deviceController = new DeviceController();
 const profileController = new ProfileController();
 const profileView = new ProfileView();
 let fetchDataInterval;
@@ -71,8 +71,6 @@ async function fillUserProfileData(data) {
   profileView.toggleUseWeatherButton();
   document.getElementById('realTimeTimeWindow').checked = true;
 
-  console.log(data)
-
   if (data.useWeather) {
     $('#predictionDiv').show();
     let weatherData = await profileController.getWeatherData(profileView.user);
@@ -80,46 +78,29 @@ async function fillUserProfileData(data) {
     document.getElementById('weatherContainer').appendChild(profileView.addWeatherCards(weatherData));
     saveDailyWeatherData(weatherData);
     getPredictedMoisture();
-  }else{
+  } else {
     $('#predictionDiv').hide();
   }
 }
 
-function register() {
+async function register() {
   if (document.getElementById('usernameRegister').value.length > 0 &&
     document.getElementById('passwordRegister').value.length > 0) {
-    registerAjax(document.getElementById('usernameRegister').value,
+    let response = await profileController.registerAjax(document.getElementById('usernameRegister').value,
       document.getElementById('passwordRegister').value, document.getElementById('deviceId').value);
+    userId = response.userId;
+    getDevices();
+    document.getElementById('usernameView').value = username;
+    showContainer('dashboard');
+
+    document.getElementById('main').classList.remove('d-none');
+    document.getElementById('loginContainer').style.display = 'none';
 
   } else {
     document.getElementById('form').classList.add('was-validated');
   }
 }
-function registerAjax(username, password, deviceId) {
-  return new Promise(function (resolve, reject) {
-    // Use jQuery's AJAX function
-    $.ajax({
-      url: '/register',
-      method: 'POST',
-      data: { username: username, password: password, device_id: deviceId },
-      success: function (response) {
-        userId = response.userId;
-        getDevices();
-        document.getElementById('usernameView').value = username;
-        showContainer('dashboard');
 
-        document.getElementById('main').classList.remove('d-none');
-        document.getElementById('loginContainer').style.display = 'none';
-
-        resolve(response);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        // Reject the promise with an error message
-        reject(errorThrown);
-      }
-    });
-  });
-}
 function showContainer(id) {
   const containers = document.querySelectorAll('.fileContainer');
   containers.forEach(function (container) {
@@ -299,6 +280,7 @@ function loadPredictedMoistureChart(data) {
     },
   });
   $('#predictionChartLoadingIcon').hide();
+  document.getElementById('predictedMoistureChart').style.opacity = 1;
 
 
 }
@@ -320,6 +302,7 @@ function updatePredictionChart(data) {
   predictedMoistureChart.data.datasets[0].data = dataObject;
   predictedMoistureChart.update();
   $('#predictionChartLoadingIcon').hide();
+  document.getElementById('predictedMoistureChart').style.opacity = 1;
 
 }
 function filterSensorData(data) {
@@ -331,32 +314,6 @@ function filterSensorData(data) {
     return downsampleTimeSeries(data, 50);
   }
 
-}
-function enableDataTransmission() {
-  // Listen for 'moistureUpdate' events from the server
-  // socket.on('moistureUpdate', (moistureData) => {
-  //   // Assuming devicesChart is already initialized
-  //   addRealTimeDataToChart(moistureData);
-  // });
-}
-function disableDataTransmission() {
-
-  // Remove the 'moistureUpdate' event listener
-  // socket.off('moistureUpdate');
-}
-
-function deleteDevice(id) {
-  $.ajax({
-    url: `/devices/delete/${id}`,
-    method: 'DELETE',
-    success: function (response) {
-      console.log('deleted successfully');
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.error('Error during logout:', errorThrown);
-      // Handle the error if needed
-    }
-  });
 }
 
 function createDevicesList(device) {
@@ -385,7 +342,7 @@ function createDevicesList(device) {
   deleteButton.className = 'bi bi-trash text-danger littleTrash';
   deleteButton.style.float = 'right';
   deleteButton.addEventListener('click', function () {
-    deleteDevice(device.device_id || device._id); // Adjust property name accordingly
+    deviceController.deleteDevice(device.device_id || device._id); // Adjust property name accordingly
     div.remove();
   })
 
@@ -501,7 +458,7 @@ function processMoistureData(chart, moistureData) {
  * @param {*} timeWindow 
  */
 async function changeTimeWindow(device_id, timeWindow) {
-  if(!timeWindow){
+  if (!timeWindow) {
     timeWindow = getSelectedValueRadio('timeWindowRadio');
 
   }
@@ -544,6 +501,8 @@ function predictMoisture(data) {
 
 async function getPredictedMoisture() {
   $('#predictionChartLoadingIcon').show();
+  document.getElementById('predictedMoistureChart').style.opacity = 0.5;
+
   predictedMoistureChart.data.datasets[0].data = [];
   predictedMoistureChart.update();
 
