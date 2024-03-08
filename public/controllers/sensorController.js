@@ -20,6 +20,7 @@ getDeviceData(id, timeWindow, isFirstCall) {
                 resolve(response);
             },
             error: function (jqXHR, textStatus, errorThrown) {
+                showAlert('alert', 'Unable to connect to the sensor')
                 // Reject the promise with an error message
                 reject(errorThrown);
             }

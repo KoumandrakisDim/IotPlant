@@ -13,7 +13,7 @@ require('dotenv').config();
 
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
-const { arduinoWebsocket } = require('./arduinoWebsocket');
+// const { arduinoWebsocket } = require('./arduinoWebsocket');
 // const { aiModel } = require('./aiModel/ai');
 
 const app = express();

@@ -77,11 +77,12 @@ function getSelectedValueRadio(name) {
     return '';
 }
 
-function showAlert(alertId, alertText) {
+function showAlert(alertId, alertText, className) {
     let alert = document.getElementById(alertId);
     alert.innerText = alertText;
     alert.style.opacity = 1;
     alert.style.zIndex = 1000;
+
     setTimeout(() => {
         alert.style.opacity = 0;
         setTimeout(() => {
