@@ -49,7 +49,6 @@ class ProfileController {
                 error: function (jqXHR, textStatus, errorThrown) {
                     // Handle the error here
                     reject();
-                    console.error('Error:', errorThrown);
                 }
             });
         });

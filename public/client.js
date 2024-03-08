@@ -505,8 +505,15 @@ async function getPredictedMoisture() {
 
   predictedMoistureChart.data.datasets[0].data = [];
   predictedMoistureChart.update();
+  let predictedMoisture;
 
-  let predictedMoisture = await profileController.getPredictedMoisture();
+  try{
+    predictedMoisture = await profileController.getPredictedMoisture();
+
+  }catch{
+    showAlert('alert', 'Wrong username or password');
+    return;
+  }
   console.log(predictedMoisture)
   // if(predictedMoistureChart){
   //   predictedMoistureChart.destroy();

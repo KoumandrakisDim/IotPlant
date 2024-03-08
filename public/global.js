@@ -1,3 +1,8 @@
+/**
+ * 
+ * @param {*} dateString 
+ * @returns 
+ */
 function formatDateString(dateString) {
     const date = new Date(dateString);
 
@@ -10,6 +15,13 @@ function formatDateString(dateString) {
 
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
+/**
+ * 
+ * @param {*} point1 
+ * @param {*} point2 
+ * @param {*} fraction 
+ * @returns 
+ */
 function interpolateDate(point1, point2, fraction) {
     const timestamp1 = new Date(point1.timestamp).getTime();
     const timestamp2 = new Date(point2.timestamp).getTime();
@@ -22,7 +34,12 @@ function interpolateDate(point1, point2, fraction) {
         value: point1.value + fraction * (point2.value - point1.value)
     };
 }
-
+/**
+ * 
+ * @param {*} originalData 
+ * @param {*} targetPoints 
+ * @returns 
+ */
 function downsampleTimeSeries(originalData, targetPoints) {
     targetPoints = 70;
 
@@ -49,7 +66,12 @@ function downsampleTimeSeries(originalData, targetPoints) {
     return downsampledData;
 }
 
-
+/**
+ * 
+ * @param {*} labels 
+ * @param {*} data 
+ * @returns 
+ */
 function combineArrays(labels, data) {
     const combinedArray = [];
 
@@ -76,7 +98,12 @@ function getSelectedValueRadio(name) {
     }
     return '';
 }
-
+/**
+ * 
+ * @param {*} alertId 
+ * @param {*} alertText 
+ * @param {*} className 
+ */
 function showAlert(alertId, alertText, className) {
     let alert = document.getElementById(alertId);
     alert.innerText = alertText;
