@@ -458,26 +458,31 @@ function processMoistureData(chart, moistureData) {
  * @param {*} timeWindow 
  */
 async function changeTimeWindow(device_id, timeWindow) {
-  if (!timeWindow) {
-    timeWindow = getSelectedValueRadio('timeWindowRadio');
 
-  }
-  let response = await sensorController.getDeviceData(device.device_id, timeWindow);
-  originalData = response;
-  if (!chartLoaded) {
-    loadChart(response);
-    chartLoaded = true;
-  }
-  if (timeWindow === 'realTime') {
-    if (!fetchDataInterval) {
-      fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 5000);
+  try {
+    if (!timeWindow) {
+      timeWindow = getSelectedValueRadio('timeWindowRadio');
     }
+    let response = await sensorController.getDeviceData(device.device_id, timeWindow);
+    originalData = response;
+    if (!chartLoaded) {
+      loadChart(response);
+      chartLoaded = true;
+    }
+    if (timeWindow === 'realTime') {
+      if (!fetchDataInterval) {
+        fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 5000);
+      }
 
-  } else {
-    clearInterval(fetchDataInterval);
-    fetchDataInterval = null;
+    } else {
+      clearInterval(fetchDataInterval);
+      fetchDataInterval = null;
+    }
+    updateChart(response, timeWindow);
+  } catch {
+    showAlert('alert', 'Could not get sensor data');
   }
-  updateChart(response, timeWindow);
+
 }
 
 function predictMoisture(data) {
@@ -507,10 +512,10 @@ async function getPredictedMoisture() {
   predictedMoistureChart.update();
   let predictedMoisture;
 
-  try{
+  try {
     predictedMoisture = await profileController.getPredictedMoisture();
 
-  }catch{
+  } catch {
     showAlert('alert', 'Wrong username or password');
     return;
   }

@@ -388,11 +388,18 @@ async function endpoints(app) {
         const forecastDataString = JSON.stringify(forecastData);
 
         const spawn = require("child_process").spawn;
+        console.log(forecastDataString)
+        console.log(initialSoilMoisture)
+
         const pythonProcess = spawn('python', ["predict4.py", forecastDataString, initialSoilMoisture, modelPath]);
+
+        
         return new Promise(function (resolve, reject) {
 
             pythonProcess.stdout.on('data', (data) => {
                 console.log('python response')
+                console.log(data.toString())
+
                 resolve(data.toString())
             });
         });
