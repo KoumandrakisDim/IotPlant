@@ -54,4 +54,24 @@ class ProfileController {
             });
         });
     }
+
+    loginAjax(username, password) {
+        return new Promise(function (resolve, reject) {
+          // Use jQuery's AJAX function
+          $.ajax({
+            url: '/login',
+            method: 'POST',
+            data: { username: username, password: password },
+            success: async function (response) {
+      
+              resolve(response);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+              showAlert('alert', 'Wrong username or password');
+              // Reject the promise with an error message
+              reject(errorThrown);
+            }
+          });
+        });
+      }
 }

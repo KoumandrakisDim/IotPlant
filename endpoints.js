@@ -8,18 +8,15 @@ const WeatherData = require('./models/weatherData');
 const Plant = mongoose.model('Plant', { user_id: String, device_id: String, status: String, name: String });
 const axios = require('axios');
 
-const dotenv = require('dotenv');
-const result = dotenv.config();
-const { PythonShell } = require('python-shell');
+// const dotenv = require('dotenv');
+// const result = dotenv.config();
+// const { PythonShell } = require('python-shell');
 const bodyParser = require('body-parser');
 
 
 const weatherApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
 let lastMoistureValue = 0;
 var filteredWeatherData = [];
-
-console.log('database url')
-console.log(process.env.MONGODB_URI)
 
 async function endpoints(app) {
     app.use(bodyParser.json());
@@ -61,7 +58,7 @@ async function endpoints(app) {
                 console.log('User logged in:', user);
 
                 // You can also send the user's ID as part of the response if needed
-                return res.json({ userId: user._id, user: user, message: 'Login successful' });
+                return res.json({ userId: user._id, user: user, message: 'Login successful', port: process.env.PORT || 3000 });
             } else {
                 console.log('Invalid credentials for username:', username);
                 return res.status(401).send('Invalid username or password.');
@@ -71,7 +68,6 @@ async function endpoints(app) {
             return res.status(500).send('Internal Server Error');
         }
     });
-
 
     app.get('/logout', (req, res) => {
         req.session.destroy(err => {

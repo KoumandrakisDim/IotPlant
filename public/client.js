@@ -5,7 +5,8 @@ let devices = [];
 let devicesChart;
 let originalData = []; // Your initial data
 const targetPoints = 50;
-// const socket = io('http://localhost:3001');
+let socket;
+
 var chartLoaded = false;
 let device = {};
 let predictedMoistureChart;
@@ -13,6 +14,7 @@ let predictedMoistureChartLoaded = false;
 
 const profileController = new ProfileController();
 const profileView = new ProfileView();
+let fetchDataInterval;
 
 function eventListeners() {
   document.getElementById('loginButton').addEventListener('click', function () {
@@ -35,44 +37,30 @@ function eventListeners() {
   document.getElementById('predictMoistureButton').addEventListener('click', getPredictedMoisture);
 
 }
-function login() {
-  loginAjax(document.getElementById('username').value, document.getElementById('password').value)
+async function login() {
+  let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
+  console.log(response)
+  userId = response.userId;
+  let userDevices = await getDevices(userId);
+  userDevices.forEach(function (device) {
+    document.getElementById('devicesContainer').appendChild(createDevicesList(device));
+  })
+  if (userDevices[0]) {
+    getDeviceData(userDevices[0].device_id, 'realTime', true);
+    device = userDevices[0];
+  }
+
+  showContainer('dashboard');
+  document.getElementById('main').classList.remove('d-none');
+  $('#loginContainer').hide();
+  profileView.user = response.user;
+
+
+  fillUserProfileData(response.user);
+  socket = io('http://localhost:' + response.port);
+
 }
-function loginAjax(username, password) {
-  return new Promise(function (resolve, reject) {
-    // Use jQuery's AJAX function
-    $.ajax({
-      url: '/login',
-      method: 'POST',
-      data: { username: username, password: password },
-      success: async function (response) {
-        userId = response.userId;
-        let userDevices = await getDevices(userId);
-        userDevices.forEach(function (device) {
-          document.getElementById('devicesContainer').appendChild(createDevicesList(device));
-        })
-        if (userDevices[0]) {
-          getDeviceData(userDevices[0].device_id, 'realTime', true);
-          device = userDevices[0];
-        }
 
-        showContainer('dashboard');
-        document.getElementById('main').classList.remove('d-none');
-        $('#loginContainer').hide();
-        profileView.user = response.user;
-
-
-        fillUserProfileData(response.user);
-        resolve(response);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        showAlert('alert', 'Wrong username or password');
-        // Reject the promise with an error message
-        reject(errorThrown);
-      }
-    });
-  });
-}
 async function fillUserProfileData(data) {
   $('#city').val(data.city);
   document.getElementById('usernameView').value = data.username;
@@ -193,8 +181,13 @@ function getDeviceData(id, timeWindow, isFirstCall) {
         }
         if (timeWindow === 'realTime') {
           enableDataTransmission();
+          fetchDataInterval = setInterval(changeTimeWindow, 10000);
+
         } else {
+          console.log(timeWindow)
           disableDataTransmission();
+          clearInterval(fetchDataInterval);
+
         }
         resolve(response);
       },
@@ -206,6 +199,9 @@ function getDeviceData(id, timeWindow, isFirstCall) {
 
   });
 }
+// function fetchSensorData(){
+  
+// }
 /**
  * 
  * @param {*} data 
@@ -384,15 +380,15 @@ function filterSensorData(data) {
 }
 function enableDataTransmission() {
   // Listen for 'moistureUpdate' events from the server
-  // socket.on('moistureUpdate', (moistureData) => {
-  //   // Assuming devicesChart is already initialized
-  //   addRealTimeDataToChart(moistureData);
-  // });
+  socket.on('moistureUpdate', (moistureData) => {
+    // Assuming devicesChart is already initialized
+    addRealTimeDataToChart(moistureData);
+  });
 }
 function disableDataTransmission() {
 
   // Remove the 'moistureUpdate' event listener
-  // socket.off('moistureUpdate');
+  socket.off('moistureUpdate');
 }
 
 function deleteDevice(id) {

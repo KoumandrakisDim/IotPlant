@@ -7,6 +7,8 @@ const ejs = require('ejs');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlant';
+const cors = require('cors');
+const socketIo = require('socket.io');
 
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
@@ -15,10 +17,15 @@ const { arduinoWebsocket } = require('./arduinoWebsocket');
 
 const app = express();
 app.use(express.json());
-
-const arduinoCommunication = require('./arduinoData');
+app.use(cors());
 
 const port = process.env.PORT || 3000;
+
+const server = app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+});
+const io = socketIo(server);
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -54,9 +61,7 @@ db.once('open', () => {
 });
 
 // Start the server
-const server = app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-});
+
 // Setup WebSocket
 // setupWebSocket(server);
 // initializeApp(app, db);
