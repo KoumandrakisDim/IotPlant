@@ -71,7 +71,8 @@
               onclick="showContainer('profileContainer')">Profile</a>
             <a class="nav-link" style="cursor: pointer;margin-left:10%;"
               onclick="showContainer('devicesFileContainer')">Devices</a>
-            <a class="nav-link" style="cursor: pointer;;margin-left:10%;" onclick="profileController.logout()">Logout</a>
+            <a class="nav-link" style="cursor: pointer;;margin-left:10%;"
+              onclick="profileController.logout()">Logout</a>
 
           </li>
         </ul>
@@ -176,7 +177,11 @@
       Your devices:
       <button id="addDevice" class="btn btn-primary roundButton">+</button>
       <div id="devicesContainer" class="row p-3"></div>
-
+      <span class="d-block">Save sensor data</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleSaveSensorDataButton">
+        <span class="slider round"></span>
+      </label>
     </div>
   </div>
 

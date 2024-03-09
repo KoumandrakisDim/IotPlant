@@ -1,6 +1,7 @@
 $('#useWeatherButton').on('click', () => profileView.toggleUseWeatherButton());
 $('#getUserLocationButton').on('click', () => profileView.getLocation());
 $('#saveProfileButton').on('click', () => profileView.saveProfile());
+$('#toggleSaveSensorDataButton').on('click', () => profileView.toggleSaveSensorData());
 
 class ProfileView {
 
@@ -87,8 +88,8 @@ class ProfileView {
         let scatteredCloudsIcon;
 
         // if (isDaytime) {
-            clearSkyIcon = 'assets/weatherIcons/sun.png';
-            scatteredCloudsIcon = 'assets/weatherIcons/day_partial_cloud.png';
+        clearSkyIcon = 'assets/weatherIcons/sun.png';
+        scatteredCloudsIcon = 'assets/weatherIcons/day_partial_cloud.png';
         // } else {
         //     clearSkyIcon = 'assets/weatherIcons/night_half_moon_clear.png';
         //     scatteredCloudsIcon = 'assets/weatherIcons/night_full_moon_partial_cloud.png';
@@ -156,5 +157,22 @@ class ProfileView {
         }
     };
 
+    toggleSaveSensorData() {
+        let timeWindow = getSelectedValueRadio('timeWindowRadio');
+        let flag = document.getElementById('toggleSaveSensorDataButton').checked;
+
+        if (timeWindow === 'realTime') {
+            if (!flag) {
+                clearInterval(fetchDataInterval);
+                fetchDataInterval = null;
+            }
+            else {
+
+                fetchDataInterval = setInterval(() => changeTimeWindow(null, 'realTime'), 5000);
+            }
+        }
+        deviceController.toggleSaveSensorData(userId, flag);
+
+    }
 
 }

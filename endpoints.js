@@ -15,6 +15,7 @@ const bodyParser = require('body-parser');
 
 let lastMoistureValue = 0;
 var filteredWeatherData = [];
+let saveRealTimeData = true;
 
 async function endpoints(app) {
     // const weatherApiKey = process.env.OPEN_WEATHER_MAP_API_KEY;
@@ -53,8 +54,8 @@ async function endpoints(app) {
 
             if (user && await user.comparePassword(password)) {
                 req.session.user = user; // Store user information in the session
+                saveRealTimeData = user.toggleSaveSensorData;
 
-                
                 // You can also send the user's ID as part of the response if needed
                 return res.json({ userId: user._id, user: user, message: 'Login successful', port: process.env.PORT || 3000 });
             } else {
@@ -176,42 +177,49 @@ async function endpoints(app) {
 
     // Route to retrieve latest sensor data
     app.post('/api/getSensorData/:id', async (req, res) => {
+
+        const deviceId = req.params.id;
+        const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
+        console.log(deviceId)
+        console.log(timeWindow)
+
         try {
-            const deviceId = req.params.id;
-            const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
+            if (saveRealTimeData) {
 
-            let query = { device_id: deviceId };
-            // Adjust the query based on the timeWindow parameter
-            if (timeWindow === 'year') {
-                query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
-            } else if (timeWindow === 'month') {
-                query.timestamp = { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
-            } else if (timeWindow === 'week') {
-                query.timestamp = { $gte: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };
-            } else if (timeWindow === 'day') {
-                query.timestamp = { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) };
-            } else if (timeWindow === 'hour') {
-                query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
-            } else if (timeWindow === 'max') {
-                query.timestamp = {};
-            } else if (timeWindow === 'realTime') {
-                // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
-                const latestData = await SensorData.find({ device_id: deviceId })
-                    .sort({ timestamp: -1 }) // Descending order for most recent first
-                    .limit(50);
 
-                // Reverse the order in your application code
-                const reversedData = latestData.reverse();
+                let query = { device_id: deviceId };
+                // Adjust the query based on the timeWindow parameter
+                if (timeWindow === 'year') {
+                    query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
+                } else if (timeWindow === 'month') {
+                    query.timestamp = { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
+                } else if (timeWindow === 'week') {
+                    query.timestamp = { $gte: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };
+                } else if (timeWindow === 'day') {
+                    query.timestamp = { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) };
+                } else if (timeWindow === 'hour') {
+                    query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
+                } else if (timeWindow === 'max') {
+                    query.timestamp = {};
+                } else if (timeWindow === 'realTime') {
+                    // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
+                    const latestData = await SensorData.find({ device_id: deviceId })
+                        .sort({ timestamp: -1 }) // Descending order for most recent first
+                        .limit(50);
 
-                lastMoistureValue = latestData[0].value;
+                    // Reverse the order in your application code
+                    const reversedData = latestData.reverse();
+                    console.log(lastMoistureValue = latestData[0])
 
-                return res.json(reversedData);
+                    lastMoistureValue = latestData[0].value;
+
+                    return res.json(reversedData);
+                }
+                const sensorData = await SensorData.find(query);
+
+
+                res.json(sensorData);
             }
-            const sensorData = await SensorData.find(query);
-
-
-            res.json(sensorData);
-
 
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
@@ -255,13 +263,16 @@ async function endpoints(app) {
             const sensorData = new SensorData({ device_id: 'g', value: req.body.value });
 
             // Save the sensor data to the database
-            sensorData.save()
-                .then(() => {
-                    // console.log('Sensor data saved to the database');
-                })
-                .catch((error) => {
-                    console.error('Error saving sensor data to the database:', error);
-                });
+            if (saveRealTimeData) {
+                sensorData.save()
+                    .then(() => {
+                        // console.log('Sensor data saved to the database');
+                    })
+                    .catch((error) => {
+                        console.error('Error saving sensor data to the database:', error);
+                    });
+            }
+
             // Process the request and generate the response data
 
             // Send the response data back to the client
@@ -352,24 +363,36 @@ async function endpoints(app) {
         }
     });
 
-    app.get('/testConnectivity', async (req, res) => {
+    app.get('/api/predictMoisture', async (req, res) => {
+
         try {
+            let predictedMoisture = await predictMoisture(filteredWeatherData, lastMoistureValue);
 
             // Send predictions as response
-            res.status(200).json({ status: 'Ok' });
+            res.status(200).json({ predictedMoisture });
         } catch (error) {
             console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     });
 
-    app.get('/api/predictMoisture', async (req, res) => {
+    app.post('/api/toggleSaveData', async (req, res) => {
+        const data = req.body;
+        console.log(data);
+
         try {
 
-            let predictedMoisture = await predictMoisture(filteredWeatherData, lastMoistureValue);
+            if (data.flag) {
+                saveRealTimeData = true;
+            } else {
+                saveRealTimeData = false;
+            }
+            await User.findOneAndUpdate(
+                { _id: data.id }, // Query condition
+                { toggleSaveSensorData: data.flag }
+            );
+            res.status(200).json({});
 
-            // Send predictions as response
-            res.status(200).json({ predictedMoisture });
         } catch (error) {
             console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -393,7 +416,7 @@ async function endpoints(app) {
 
         const pythonProcess = spawn('python', ["predict4.py", forecastDataString, initialSoilMoisture, modelPath]);
 
-        
+
         return new Promise(function (resolve, reject) {
 
             pythonProcess.stdout.on('data', (data) => {

@@ -8,9 +8,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-   password: String,
+  password: String,
   city: String,
-  useWeather: Boolean
+  useWeather: Boolean,
+  toggleSaveSensorData: Boolean
 });
 
 // Add a static method to authenticate users

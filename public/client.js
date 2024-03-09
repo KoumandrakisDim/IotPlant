@@ -57,7 +57,7 @@ async function login() {
   document.getElementById('main').classList.remove('d-none');
   $('#loginContainer').hide();
   profileView.user = response.user;
-
+  document.getElementById('toggleSaveSensorDataButton').checked = profileView.user.toggleSaveSensorData;
 
   fillUserProfileData(response.user);
   // socket = io('http://localhost:' + response.port);
@@ -470,7 +470,7 @@ async function changeTimeWindow(device_id, timeWindow) {
       chartLoaded = true;
     }
     if (timeWindow === 'realTime') {
-      if (!fetchDataInterval) {
+      if (!fetchDataInterval && profileView.user.toggleSaveSensorData) {
         fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 5000);
       }
 
