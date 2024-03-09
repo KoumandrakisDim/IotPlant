@@ -184,8 +184,6 @@ async function endpoints(app) {
         console.log(timeWindow)
 
         try {
-            if (saveRealTimeData) {
-
 
                 let query = { device_id: deviceId };
                 // Adjust the query based on the timeWindow parameter
@@ -217,9 +215,7 @@ async function endpoints(app) {
                 }
                 const sensorData = await SensorData.find(query);
 
-
                 res.json(sensorData);
-            }
 
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
