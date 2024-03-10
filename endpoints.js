@@ -254,7 +254,7 @@ async function endpoints(app) {
         const { sensorData } = req.body;
 
         let responseData = ''; // Assuming you have some data to send back
-        var receivedJson = JSON.parse(req.body);
+        var receivedJson = req.body;
 
         try {
             if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
