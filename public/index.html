@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pythonion</title>
+  <title>Phytonion</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
     integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -82,53 +82,38 @@
 
       </div>
       <canvas class="mt-2 chart" id="devicesChart"></canvas>
-      <div class="buttonContainer d-flex justify-content-center p-3">
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="timeWindowRadio" id="yearTimeWindow" value="year">
-          <label class="form-check-label" for="yearTimeWindow">
-            Year
-          </label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="timeWindowRadio" id="monthTimeWindow" value="month">
-          <label class="form-check-label" for="monthTimeWindow">
-            Month
-          </label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="timeWindowRadio" id="weekTimeWindow" value="week">
-          <label class="form-check-label" for="weekTimeWindow">
-            Week
-          </label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="timeWindowRadio" id="dayTimeWindow" value="day">
-          <label class="form-check-label" for="dayTimeWindow">
-            Day
-          </label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="timeWindowRadio" id="hourTimeWindow" value="hour">
-          <label class="form-check-label" for="hourTimeWindow">
-            Hour
-          </label>
-        </div>
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="timeWindowRadio" id="realTimeTimeWindow" value="realTime"
-            checked>
-          <label class="form-check-label" for="realTimeTimeWindow">
-            Real time
-          </label>
-        </div>
+      <div class="buttonContainer justify-content-center d-flex">
+        <label class="form-check-label timeWindowButton" id="yearTimeWindowButton" value="year">
+          Year
+        </label>
+        <label class="form-check-label timeWindowButton" id="monthTimeWindowButton" value="month">
+          Month
+        </label>
+        <label class="form-check-label timeWindowButton" id="weekTimeWindowButton" value="week">
+          Week
+        </label>
+        <label class="form-check-label timeWindowButton" id="dayTimeWindowButton" value="day">
+          Day
+        </label>
+        <label class="form-check-label timeWindowButton" id="hourTimeWindowButton" value="hour">
+          Hour
+        </label>
+        <label class="form-check-label timeWindowButton" id="realTimeTimeWindowButton" value="realTime">
+          Real time
+        </label>
+
       </div>
+
+      <!-- </div> -->
+      <!-- </div> -->
       <div id="predictionDiv">
         <button class="btn btn-secondary roundButton mt-2" id="predictMoistureButton"><i
             class="bi bi-bootstrap-reboot d-block"></i></button>
-        <div>
-          <canvas class="mt-2 chart" id="predictedMoistureChart"></canvas>
-          <div class="spinner-border" role="status" id="predictionChartLoadingIcon">
-          </div>
-
+        <div class="chartContainer mt-2 ">
+            <canvas class="chart" id="predictedMoistureChart" style="width: 100% !important;height: 100% ;"></canvas>
+            <div class="spinner-container">
+              <div class="spinner-border" role="status" id="predictionChartLoadingIcon"></div>
+            </div>
         </div>
       </div>
 
@@ -173,7 +158,6 @@
 
       <div id="moistureDisplay" class="row p-3"></div>
 
-      Your devices:
       <button id="addDevice" class="btn btn-primary roundButton">+</button>
       <div id="devicesContainer" class="row p-3"></div>
       <span class="d-block">Save sensor data</span>

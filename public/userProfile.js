@@ -39,7 +39,7 @@ class ProfileView {
     addWeatherCards(data) {
 
         const div = document.createElement('div');
-        div.className = 'row p-3';
+        div.className = 'row p-1';
         data = filterWeatherVariables(data.list);
         console.log(data)
         // Assuming data.list is an array of forecast data
@@ -64,15 +64,15 @@ class ProfileView {
         const temperature = forecast.temp;
         let iconUrl = profileView.getWeatherIconUrl(forecast);
         // Create HTML structure for the card
-        card.innerHTML = `<div class="weather-card p-2">
-            <div class="card-header">${forecast.date}</div>
-            <div class="card-body">
-                <p> ${Number(temperature.toFixed(2))} °C</p>
+        card.innerHTML = `<div class="weather-card p-1">
+            <div class="card-header font15px">${forecast.date}</div>
+            <div class="card-body font15px">
+                <span> ${Number(temperature.toFixed(2))} °C</span>
                 <div class='d-flex justify-content-center'>
                     <img class='weatherIcon' src=${iconUrl}>
                 </div>
-                <p> Humidity: ${Number(forecast.humidity.toFixed(2))} %</p>
-                <p> Wind: ${Number(forecast.windSpeed.toFixed(2))} km/h</p>
+                <span class='font11px'> Humidity: ${Number(forecast.humidity.toFixed(2))} %</span><br>
+                <span class='font11px'> Wind: ${Number(forecast.windSpeed.toFixed(2))} km/h</span>
             </div>
             </div>
         `;

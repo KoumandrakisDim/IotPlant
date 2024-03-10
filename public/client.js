@@ -38,19 +38,37 @@ function eventListeners() {
   }
   document.getElementById('predictMoistureButton').addEventListener('click', getPredictedMoisture);
 
+  $('#realTimeTimeWindowButton').on('click', () => selectTimeWindowClick('realTimeTimeWindowButton', 'realTime'));
+  $('#hourTimeWindowButton').on('click', () => selectTimeWindowClick('hourTimeWindowButton', 'hour'));
+  $('#dayTimeWindowButton').on('click', () => selectTimeWindowClick('dayTimeWindowButton', 'day'));
+  $('#weekTimeWindowButton').on('click', () => selectTimeWindowClick('weekTimeWindowButton', 'week'));
+  $('#monthTimeWindowButton').on('click', () => selectTimeWindowClick('monthTimeWindowButton', 'month'));
+  $('#yearTimeWindowButton').on('click', () => selectTimeWindowClick('yearTimeWindowButton', 'year'));
+
+}
+function selectTimeWindowClick(timeWindowButton, timeWindow) {
+  let timeWindowButtons = document.querySelectorAll('.timeWindowButton');
+  timeWindowButtons.forEach(function (button) {
+    button.classList.remove('selectedTimeWindow');
+  })
+
+  document.getElementById(timeWindowButton).classList.add('selectedTimeWindow');
+  changeTimeWindow(device.device_id, timeWindow);
 }
 async function login() {
   let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
 
   userId = response.userId;
   let userDevices = await getDevices(userId);
+  $('#devicesContainer').html(null);
+
   userDevices.forEach(function (device) {
     document.getElementById('devicesContainer').appendChild(createDevicesList(device));
   })
   if (userDevices[0]) {
     // sensorController.getDeviceData(userDevices[0].device_id, 'realTime', true);
     device = userDevices[0];
-    changeTimeWindow(device.device_id, 'realTime');
+    selectTimeWindowClick('realTimeTimeWindowButton', 'realTime');
   }
 
   showContainer('dashboard');
@@ -69,8 +87,7 @@ async function fillUserProfileData(data) {
   document.getElementById('usernameView').value = data.username;
   document.getElementById('useWeatherButton').checked = data.useWeather;
   profileView.toggleUseWeatherButton();
-  document.getElementById('realTimeTimeWindow').checked = true;
-
+  // document.getElementById('realTimeTimeWindow').checked = true;
   if (data.useWeather) {
     $('#predictionDiv').show();
     let weatherData = await profileController.getWeatherData(profileView.user);
@@ -152,33 +169,36 @@ function loadChart(data) {
 
     labels.push(formatDateString(deviceData.timestamp));
     graphDatamoisture.push(deviceData.moisture);
-    graphDatatempterature.push(deviceData.tempterature);
+    graphDatatempterature.push(deviceData.temperature);
     graphDatahumidity.push(deviceData.humidity);
 
     devices = data;
   })
-  console.log(graphDatamoisture)
-  console.log(graphDatatempterature)
-  console.log(graphDatahumidity)
 
   var datasets = [{
     label: 'Moisture',
     data: graphDatamoisture,
     borderColor: 'rgba(0, 128, 255, 1)', // Light blue
     backgroundColor: 'rgba(0, 128, 255, 0.2)', // Light blue with transparency
-    borderWidth: 2
+    borderWidth: 2,
+    pointRadius: 2, // Adjust point radius
+    pointBorderWidth: 2 // Adjust point border width
   }, {
     label: 'Temperature',
     data: graphDatatempterature,
     borderColor: 'rgba(255, 99, 71, 1)', // Tomato red
     backgroundColor: 'rgba(255, 99, 71, 0.2)', // Tomato red with transparency
-    borderWidth: 2
+    borderWidth: 2,
+    pointRadius: 2, // Adjust point radius
+    pointBorderWidth: 2 // Adjust point border width
   }, {
     label: 'Humidity',
     data: graphDatahumidity,
     borderColor: 'rgba(128, 128, 128, 1)', // Gray
     backgroundColor: 'rgba(128, 128, 128, 0.2)', // Gray with transparency
-    borderWidth: 2
+    borderWidth: 2,
+    pointRadius: 2, // Adjust point radius
+    pointBorderWidth: 2 // Adjust point border width
   }];
 
   const ctx = document.getElementById('devicesChart');
@@ -191,6 +211,9 @@ function loadChart(data) {
       datasets: datasets
     },
     options: {
+      layout: {
+
+      },
       scales: {
         x: {
           display: false,
@@ -265,7 +288,6 @@ function loadPredictedMoistureChart(data) {
   predictedMoistureChart = new Chart(ctx, {
     type: 'line',
     data: {
-      title: 'hi',
       labels: dates, // Initial X-axis labels
       datasets: [{
         label: 'Predicted Moisture',
@@ -332,11 +354,26 @@ function updatePredictionChart(data) {
 }
 function filterSensorData(data) {
   console.log(data)
-  if (getSelectedValueRadio('timeWindowRadio') === 'realTime') {
-    return data;
+  let selectedTimeWindow = getSelectedValueRadio();
+  let targetPoints = 70;
+  if (isPhone()) {
+    targetPoints = 40;
+  }
+  console.log(data)
+
+  if (selectedTimeWindow === 'realTime') {
+    if (isPhone()) {
+      console.log('isphone')
+      return data.slice(-10);
+    } else {
+      console.log('is notphone')
+
+      return data.slice(data);
+
+    }
   }
   else {
-    return downsampleTimeSeries(data, 50);
+    return downsampleTimeSeries(data, targetPoints);
   }
 
 }
@@ -449,9 +486,15 @@ function updateChart(data, timeWindow) {
   console.log(timeWindow)
   const valuesArray = data.map(obj => obj.moisture);
   let labelsArray = data.map(obj => obj.timestamp);
+  const temperatureArray = data.map(obj => obj.temperature);
+  const humidityArray = data.map(obj => obj.humidity);
+
   labelsArray = labelsArray.map(formatDateString);
 
   devicesChart.data.datasets[0].data = valuesArray;
+  devicesChart.data.datasets[1].data = temperatureArray;
+  devicesChart.data.datasets[2].data = humidityArray;
+
   devicesChart.data.labels = labelsArray;
 
   devicesChart.update();
@@ -486,7 +529,7 @@ async function changeTimeWindow(device_id, timeWindow) {
 
   try {
     if (!timeWindow) {
-      timeWindow = getSelectedValueRadio('timeWindowRadio');
+      timeWindow = getSelectedValueRadio();
     }
     let response = await sensorController.getDeviceData(device.device_id, timeWindow);
     originalData = response;

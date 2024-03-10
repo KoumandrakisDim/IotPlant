@@ -209,7 +209,7 @@ async function endpoints(app) {
                 const reversedData = latestData.reverse();
                 console.log(lastMoistureValue = latestData[0])
 
-                lastMoistureValue = latestData[0].value;
+                lastMoistureValue = latestData[0].moisture;
 
                 return res.json(reversedData);
             }

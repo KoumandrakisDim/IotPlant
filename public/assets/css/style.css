@@ -47,45 +47,96 @@ body {
 
 .chart {
     background-color: #f0f4e0;
-    
+
 }
-.chartContainer{
-    height: 440px;
-}
+
+
 .buttonContainer>* {
-    margin-left: 3px;
-    margin-right: 3px;
+    margin-right: 2%;
 }
 
 .buttonContainer {
     background-color: #a4cf83;
+    --bs-gutter-x: 0;
+    height: 40px;
+    align-items: center;
 }
 
 
-.weather-card{
+.weather-card {
     background-color: #f0f4e0;
+    box-shadow: 0px 1px 2px 0px #ccc;
 }
 
-.marginChildren > *{
+
+.marginChildren>* {
     margin-left: 5px;
     margin-right: 5px;
     margin-top: 5px;
 }
-.weatherIcon{
+
+.weatherIcon {
     width: 30%;
 }
 
-.chart{
-    max-height: 450px;
+.chart {
     width: 100%;
 }
 
-.spinner-border{
+/* .spinner-border {
     position: absolute;
     left: 50%;
-  top: 126%;
+    top: 126%;
+} */
+.chartContainer {
+    position: relative;
 }
 
-body{
+.spinner-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+}
+body {
     min-height: 900px;
+}
+
+.form-check-label {
+    font-size: 14px;
+}
+
+.font11px {
+    font-size: 11px;
+}
+
+.font15px {
+    font-size: 15px;
+}
+
+.form-check-label {
+    opacity: 0.8;
+}
+
+.selectedTimeWindow {
+    transition: background-color 0.3s ease;
+    background-color: #fff;
+    box-shadow: 1px 1px 0 1px #83a47a;
+}
+
+.timeWindowButton {
+    padding: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+
+}
+
+.timeWindowButton:hover {
+    transition: background-color 0.3s ease;
+    background-color: #fff;
+    box-shadow: 1px 1px 0 1px #83a47a;
 }

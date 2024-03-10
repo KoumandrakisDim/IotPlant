@@ -41,8 +41,9 @@ function interpolateDate(point1, point2, fraction) {
  * @returns 
  */
 function downsampleTimeSeries(originalData, targetPoints) {
-    targetPoints = 70;
 
+
+    console.log(targetPoints)
     if (!originalData || originalData.length === 0 || targetPoints <= 0) {
         return []; // Return an empty array if input is invalid
     }
@@ -84,19 +85,14 @@ function combineArrays(labels, data) {
 }
 
 function getSelectedValueRadio(name) {
-    // Get all radio buttons with the name 'gender'
-    const genderRadios = document.getElementsByName(name);
+    let timeWindowButtons = document.querySelectorAll('.timeWindowButton');
 
-    // Initialize a variable to store the selected value
-    let selectedValue = null;
-
-    // Loop through the radio buttons to find the selected one
-    for (const radio of genderRadios) {
-        if (radio.checked) {
-            return selectedValue = radio.value;
+    timeWindowButtons.forEach(function (button) {
+        if(button.classList.contains('selectedTimeWindow')){
+            console.log(button.getAttribute('value'))
+            return button.getAttribute('value');
         }
-    }
-    return '';
+    })
 }
 /**
  * 
@@ -209,10 +205,10 @@ function filterWeatherVariables(hourlyForecast) {
         dailyData[date].icon.push(hourlyData.weather[0].icon);
 
     });
-    
+
     // Calculate average for each day
     const forecastData = [];
-    
+
     for (const date in dailyData) {
         if (dailyData.hasOwnProperty(date)) {
             const tempSum = dailyData[date].temp.reduce((acc, curr) => acc + curr, 0);
@@ -222,7 +218,7 @@ function filterWeatherVariables(hourlyForecast) {
             const avgTemp = tempSum / numDataPoints;
             const avgWindSpeed = windSpeedSum / numDataPoints;
             const avgHumidity = humiditySum / numDataPoints;
-    
+
             forecastData.push({
                 date: date,
                 temp: avgTemp,
@@ -234,7 +230,11 @@ function filterWeatherVariables(hourlyForecast) {
             });
         }
     }
-    
+
     return forecastData;
-    
+
+}
+
+function isPhone() {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
