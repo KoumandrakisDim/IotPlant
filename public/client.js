@@ -143,10 +143,13 @@ function getDevices(userId) {
  */
 function loadChart(data) {
   let labels = [];
-  let graphData = [];
+  let graphDatamoisture = [];
   let filteredData = filterSensorData(data);
+  let graphDatatempterature = [];
+  let graphDatahumidity = [];
 
   filteredData.forEach(function (deviceData) {
+
     labels.push(formatDateString(deviceData.timestamp));
     graphDatamoisture.push(deviceData.moisture);
     graphDatatempterature.push(deviceData.tempterature);
@@ -154,25 +157,28 @@ function loadChart(data) {
 
     devices = data;
   })
+  console.log(graphDatamoisture)
+  console.log(graphDatatempterature)
+  console.log(graphDatahumidity)
 
   var datasets = [{
     label: 'Moisture',
     data: graphDatamoisture,
-    backgroundColor: 'green',
-    borderColor: 'green',
-    borderWidth: 1
+    borderColor: 'rgba(0, 128, 255, 1)', // Light blue
+    backgroundColor: 'rgba(0, 128, 255, 0.2)', // Light blue with transparency
+    borderWidth: 2
   }, {
     label: 'Temperature',
     data: graphDatatempterature,
-    backgroundColor: 'green',
-    borderColor: 'green',
-    borderWidth: 1
+    borderColor: 'rgba(255, 99, 71, 1)', // Tomato red
+    backgroundColor: 'rgba(255, 99, 71, 0.2)', // Tomato red with transparency
+    borderWidth: 2
   }, {
     label: 'Humidity',
     data: graphDatahumidity,
-    backgroundColor: 'green',
-    borderColor: 'green',
-    borderWidth: 1
+    borderColor: 'rgba(128, 128, 128, 1)', // Gray
+    backgroundColor: 'rgba(128, 128, 128, 0.2)', // Gray with transparency
+    borderWidth: 2
   }];
 
   const ctx = document.getElementById('devicesChart');
@@ -182,9 +188,7 @@ function loadChart(data) {
 
     data: {
       labels: labels, // Initial X-axis labels
-      datasets: [{
-        datasets: datasets
-      }],
+      datasets: datasets
     },
     options: {
       scales: {

@@ -85,3 +85,7 @@ body {
     left: 50%;
   top: 126%;
 }
+
+body{
+    min-height: 900px;
+}
