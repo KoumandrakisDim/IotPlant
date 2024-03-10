@@ -262,7 +262,7 @@ async function endpoints(app) {
             }
             
             const sensorData = new SensorData({
-                device_id: 'g', moisture: req.body.moisture,
+                device_id: req.body.device_id, moisture: req.body.moisture,
                 humidity: req.body.humidity, temperature: req.body.temperature
             });
             console.log(receivedJson)
