@@ -200,21 +200,30 @@ async function endpoints(app) {
                 query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
             } else if (timeWindow === 'max') {
                 // No additional filtering needed for 'max' window
+            } else if (timeWindow === 'realTime') {
+                // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
+                const latestData = await SensorData.find({ device_id: deviceId })
+                    .sort({ timestamp: -1 }) // Descending order for most recent first
+                    .limit(50);
+
+                // Reverse the order in your application code
+                const reversedData = latestData.reverse();
+
+                lastMoistureValue = latestData[0].moisture;
+
+                return res.json(reversedData);
             }
-            
+
             // Filter out documents with missing or invalid timestamps
             // query.timestamp = { $gte: new Date(), $type: 'date' };
-            console.log(query)
             // Fetch data based on the adjusted query
             let fetchedData = await SensorData.find(query);
-            console.log('response')
 
-            console.log(fetchedData[0])
             // Downsample the fetched data to a smaller set
             let downsampledData = [];
             const totalRecords = fetchedData.length;
             const sampleSize = 50; // Desired number of samples
-            
+
             if (totalRecords <= sampleSize) {
                 downsampledData = fetchedData; // If the total records are less than or equal to the sample size, no need for downsampling
             } else {
@@ -223,9 +232,9 @@ async function endpoints(app) {
                     downsampledData.push(fetchedData[i]); // Select every 'step' record from the fetched data
                 }
             }
-            
+            lastMoistureValue
             return res.json(downsampledData);
-            
+
 
 
         } catch (error) {
