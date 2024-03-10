@@ -148,9 +148,32 @@ function loadChart(data) {
 
   filteredData.forEach(function (deviceData) {
     labels.push(formatDateString(deviceData.timestamp));
-    graphData.push(deviceData.value);
+    graphDatamoisture.push(deviceData.moisture);
+    graphDatatempterature.push(deviceData.tempterature);
+    graphDatahumidity.push(deviceData.humidity);
+
     devices = data;
   })
+
+  var datasets = [{
+    label: 'Moisture',
+    data: graphDatamoisture,
+    backgroundColor: 'green',
+    borderColor: 'green',
+    borderWidth: 1
+  }, {
+    label: 'Temperature',
+    data: graphDatatempterature,
+    backgroundColor: 'green',
+    borderColor: 'green',
+    borderWidth: 1
+  }, {
+    label: 'Humidity',
+    data: graphDatahumidity,
+    backgroundColor: 'green',
+    borderColor: 'green',
+    borderWidth: 1
+  }];
 
   const ctx = document.getElementById('devicesChart');
   // const filteredData = graphData.filter((point, index) => index % n === 0);
@@ -160,9 +183,7 @@ function loadChart(data) {
     data: {
       labels: labels, // Initial X-axis labels
       datasets: [{
-        label: 'Moisture Level',
-        data: graphData, // Initial moisture values
-        borderWidth: 1,
+        datasets: datasets
       }],
     },
     options: {
@@ -422,7 +443,7 @@ function updateChart(data, timeWindow) {
     data = filterSensorData(data);
   }
   console.log(timeWindow)
-  const valuesArray = data.map(obj => obj.value);
+  const valuesArray = data.map(obj => obj.moisture);
   let labelsArray = data.map(obj => obj.timestamp);
   labelsArray = labelsArray.map(formatDateString);
 
