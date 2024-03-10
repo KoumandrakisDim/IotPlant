@@ -471,7 +471,7 @@ async function changeTimeWindow(device_id, timeWindow) {
     }
     if (timeWindow === 'realTime') {
       if (!fetchDataInterval && profileView.user.toggleSaveSensorData) {
-        fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 5000);
+        fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 21000);
       }
 
     } else {

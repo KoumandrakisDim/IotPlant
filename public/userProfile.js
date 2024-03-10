@@ -168,7 +168,7 @@ class ProfileView {
             }
             else {
 
-                fetchDataInterval = setInterval(() => changeTimeWindow(null, 'realTime'), 5000);
+                fetchDataInterval = setInterval(() => changeTimeWindow(null, 'realTime'), 21000);
             }
         }
         deviceController.toggleSaveSensorData(userId, flag);

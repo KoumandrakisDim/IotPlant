@@ -185,37 +185,37 @@ async function endpoints(app) {
 
         try {
 
-                let query = { device_id: deviceId };
-                // Adjust the query based on the timeWindow parameter
-                if (timeWindow === 'year') {
-                    query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
-                } else if (timeWindow === 'month') {
-                    query.timestamp = { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
-                } else if (timeWindow === 'week') {
-                    query.timestamp = { $gte: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };
-                } else if (timeWindow === 'day') {
-                    query.timestamp = { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) };
-                } else if (timeWindow === 'hour') {
-                    query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
-                } else if (timeWindow === 'max') {
-                    query.timestamp = {};
-                } else if (timeWindow === 'realTime') {
-                    // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
-                    const latestData = await SensorData.find({ device_id: deviceId })
-                        .sort({ timestamp: -1 }) // Descending order for most recent first
-                        .limit(50);
+            let query = { device_id: deviceId };
+            // Adjust the query based on the timeWindow parameter
+            if (timeWindow === 'year') {
+                query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
+            } else if (timeWindow === 'month') {
+                query.timestamp = { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
+            } else if (timeWindow === 'week') {
+                query.timestamp = { $gte: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };
+            } else if (timeWindow === 'day') {
+                query.timestamp = { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) };
+            } else if (timeWindow === 'hour') {
+                query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
+            } else if (timeWindow === 'max') {
+                query.timestamp = {};
+            } else if (timeWindow === 'realTime') {
+                // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
+                const latestData = await SensorData.find({ device_id: deviceId })
+                    .sort({ timestamp: -1 }) // Descending order for most recent first
+                    .limit(50);
 
-                    // Reverse the order in your application code
-                    const reversedData = latestData.reverse();
-                    console.log(lastMoistureValue = latestData[0])
+                // Reverse the order in your application code
+                const reversedData = latestData.reverse();
+                console.log(lastMoistureValue = latestData[0])
 
-                    lastMoistureValue = latestData[0].value;
+                lastMoistureValue = latestData[0].value;
 
-                    return res.json(reversedData);
-                }
-                const sensorData = await SensorData.find(query);
+                return res.json(reversedData);
+            }
+            const sensorData = await SensorData.find(query);
 
-                res.json(sensorData);
+            res.json(sensorData);
 
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
@@ -253,11 +253,19 @@ async function endpoints(app) {
     app.post('/sensorData', async (req, res) => {
         const { sensorData } = req.body;
 
-        let responseData = 'ok'; // Assuming you have some data to send back
+        let responseData = ''; // Assuming you have some data to send back
+        var receivedJson = JSON.parse(req.body);
 
         try {
-            const sensorData = new SensorData({ device_id: 'g', value: req.body.value });
-
+            if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
+                responseData = 'Temperature and humidity sensor not working';
+            }
+            
+            const sensorData = new SensorData({
+                device_id: req.body.device_id, moisture: req.body.moisture,
+                humidity: req.body.humidity, temperature: req.body.temperature
+            });
+            console.log(receivedJson)
             // Save the sensor data to the database
             if (saveRealTimeData) {
                 sensorData.save()
