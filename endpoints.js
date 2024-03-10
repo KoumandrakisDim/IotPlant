@@ -186,6 +186,7 @@ async function endpoints(app) {
         try {
 
             let query = { device_id: deviceId };
+
             // Adjust the query based on the timeWindow parameter
             if (timeWindow === 'year') {
                 query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
@@ -198,24 +199,34 @@ async function endpoints(app) {
             } else if (timeWindow === 'hour') {
                 query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
             } else if (timeWindow === 'max') {
-                query.timestamp = {};
-            } else if (timeWindow === 'realTime') {
-                // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
-                const latestData = await SensorData.find({ device_id: deviceId })
-                    .sort({ timestamp: -1 }) // Descending order for most recent first
-                    .limit(50);
-
-                // Reverse the order in your application code
-                const reversedData = latestData.reverse();
-                console.log(lastMoistureValue = latestData[0])
-
-                lastMoistureValue = latestData[0].moisture;
-
-                return res.json(reversedData);
+                // No additional filtering needed for 'max' window
             }
-            const sensorData = await SensorData.find(query);
+            
+            // Filter out documents with missing or invalid timestamps
+            // query.timestamp = { $gte: new Date(), $type: 'date' };
+            console.log(query)
+            // Fetch data based on the adjusted query
+            let fetchedData = await SensorData.find(query);
+            console.log('response')
 
-            res.json(sensorData);
+            console.log(fetchedData[0])
+            // Downsample the fetched data to a smaller set
+            let downsampledData = [];
+            const totalRecords = fetchedData.length;
+            const sampleSize = 50; // Desired number of samples
+            
+            if (totalRecords <= sampleSize) {
+                downsampledData = fetchedData; // If the total records are less than or equal to the sample size, no need for downsampling
+            } else {
+                const step = Math.ceil(totalRecords / sampleSize); // Calculate the step size for downsampling
+                for (let i = 0; i < totalRecords; i += step) {
+                    downsampledData.push(fetchedData[i]); // Select every 'step' record from the fetched data
+                }
+            }
+            
+            return res.json(downsampledData);
+            
+
 
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
@@ -260,7 +271,7 @@ async function endpoints(app) {
             if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
                 responseData = 'Temperature and humidity sensor not working';
             }
-            
+
             const sensorData = new SensorData({
                 device_id: req.body.device_id, moisture: req.body.moisture,
                 humidity: req.body.humidity, temperature: req.body.temperature

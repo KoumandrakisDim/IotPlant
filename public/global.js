@@ -31,7 +31,9 @@ function interpolateDate(point1, point2, fraction) {
 
     return {
         timestamp: interpolatedDate.toISOString(), // Convert back to a string if needed
-        value: point1.value + fraction * (point2.value - point1.value)
+        moisture: point1.moisture + fraction * (point2.moisture - point1.moisture),
+        humidity: point1.humidity + fraction * (point2.humidity - point1.humidity),
+        temperature: point1.temperature + fraction * (point2.temperature - point1.temperature)
     };
 }
 /**

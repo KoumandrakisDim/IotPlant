@@ -161,9 +161,10 @@ function getDevices(userId) {
 function loadChart(data) {
   let labels = [];
   let graphDatamoisture = [];
-  let filteredData = filterSensorData(data);
+  // let filteredData = filterSensorData(data);
   let graphDatatempterature = [];
   let graphDatahumidity = [];
+  let filteredData = data;
 
   filteredData.forEach(function (deviceData) {
 
@@ -481,7 +482,9 @@ function addRealTimeDataToChart(newValue) {
 function updateChart(data, timeWindow) {
 
   if (timeWindow !== 'realTime') {
-    data = filterSensorData(data);
+    // data = filterSensorData(data);
+    data = data;
+
   }
   console.log(timeWindow)
   const valuesArray = data.map(obj => obj.moisture);
