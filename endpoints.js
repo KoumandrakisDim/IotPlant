@@ -336,12 +336,12 @@ async function endpoints(app) {
         }
     });
 
-    app.post('/sensorData', async (req, res) => {
+    app.post('/sensorData', validateApiKey, async (req, res) => {
         const { sensorData } = req.body;
 
         let responseData = ''; // Assuming you have some data to send back
         var receivedJson = req.body;
-        console.log(req.headers);
+
         try {
             if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
                 responseData = 'Temperature and humidity sensor not working';
@@ -351,7 +351,7 @@ async function endpoints(app) {
                 device_id: req.body.device_id, moisture: req.body.moisture,
                 humidity: req.body.humidity, temperature: req.body.temperature
             });
-            console.log(receivedJson)
+
             // Save the sensor data to the database
             if (saveRealTimeData) {
                 sensorData.save()
