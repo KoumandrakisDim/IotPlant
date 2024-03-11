@@ -45,7 +45,12 @@ function eventListeners() {
   $('#monthTimeWindowButton').on('click', () => selectTimeWindowClick('monthTimeWindowButton', 'month'));
   $('#yearTimeWindowButton').on('click', () => selectTimeWindowClick('yearTimeWindowButton', 'year'));
   $(window).on('resize', function () {
-    $("#devicesGrid").jqGrid('setGridWidth', $("#devicesGridContainer").width());
+    console.log('resize')
+    let grid = $("#devicesContainer").children().eq(0);
+    console.log(grid)
+    let newWidth = grid.parent().width(); // Use parent() to select the parent container and width() method to get its width
+    $("#devicesGrid").jqGrid("setGridWidth", newWidth, true);
+
   });
 }
 function selectTimeWindowClick(timeWindowButton, timeWindow) {

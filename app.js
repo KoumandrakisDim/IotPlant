@@ -74,7 +74,7 @@ endpoints(app);
 // arduinoCommunication.arduinoData('Test data from main app');
 
 const limiter = rateLimit({
-    store: new MongoStore({ uri: 'mongodb://localhost:27017/rate-limit' }),
+    store: new MongoStore({ uri: mongoURI }),
     max: 100,
     windowMs: 15 * 60 * 1000,
     message: "Too many requests from this IP, please try again later."
