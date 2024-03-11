@@ -44,7 +44,9 @@ function eventListeners() {
   $('#weekTimeWindowButton').on('click', () => selectTimeWindowClick('weekTimeWindowButton', 'week'));
   $('#monthTimeWindowButton').on('click', () => selectTimeWindowClick('monthTimeWindowButton', 'month'));
   $('#yearTimeWindowButton').on('click', () => selectTimeWindowClick('yearTimeWindowButton', 'year'));
-
+  $(window).on('resize', function () {
+    $("#devicesGrid").jqGrid('setGridWidth', $("#devicesGridContainer").width());
+  });
 }
 function selectTimeWindowClick(timeWindowButton, timeWindow) {
   let timeWindowButtons = document.querySelectorAll('.timeWindowButton');
@@ -59,15 +61,18 @@ async function login() {
   let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
 
   userId = response.userId;
-  let userDevices = await getDevices(userId);
-  $('#devicesContainer').html(null);
+  console.log(userId)
+  let userDevices = await deviceController.getDevices(userId);
+  deviceController.loadDevicesGrid(userId);
+  // $('#devicesContainer').html(null);
 
-  userDevices.forEach(function (device) {
-    document.getElementById('devicesContainer').appendChild(createDevicesList(device));
-  })
+  // userDevices.forEach(function (device) {
+  //   document.getElementById('devicesContainer').appendChild(createDevicesList(device));
+  // })
   if (userDevices[0]) {
     // sensorController.getDeviceData(userDevices[0].device_id, 'realTime', true);
     device = userDevices[0];
+    console.log(device)
     selectTimeWindowClick('realTimeTimeWindowButton', 'realTime');
   }
 
@@ -106,7 +111,7 @@ async function register() {
     let response = await profileController.registerAjax(document.getElementById('usernameRegister').value,
       document.getElementById('passwordRegister').value, document.getElementById('deviceId').value);
     userId = response.userId;
-    getDevices();
+    // getDevices();
     document.getElementById('usernameView').value = username;
     showContainer('dashboard');
 
@@ -132,23 +137,6 @@ function loadPage(url) {
       document.getElementById('main-content').innerHTML = html;
     })
     .catch(error => console.error('Error loading page:', error));
-}
-function getDevices(userId) {
-  return new Promise(function (resolve, reject) {
-    // Use jQuery's AJAX function
-    $.ajax({
-      url: `/user/${userId}/devices`, // Adjust the URL to match your server route
-      method: 'GET',
-      success: function (response) {
-        resolve(response);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        // Reject the promise with an error message
-        reject(errorThrown);
-      }
-    });
-
-  });
 }
 
 // function fetchSensorData(){
@@ -224,7 +212,7 @@ function loadChart(data) {
         },
         y: {
           min: 0,    // Set the minimum value for the Y-axis
-          max: 101,  // Set the maximum value for the Y-axis
+          max: 105,  // Set the maximum value for the Y-axis
           ticks: {
             stepSize: 1  // Set the step size between ticks (optional)
           },
@@ -306,7 +294,7 @@ function loadPredictedMoistureChart(data) {
         },
         y: {
           min: 0,    // Set the minimum value for the Y-axis
-          max: 101,  // Set the maximum value for the Y-axis
+          max: 105,  // Set the maximum value for the Y-axis
           ticks: {
             stepSize: 1  // Set the step size between ticks (optional)
           },
@@ -379,49 +367,7 @@ function filterSensorData(data) {
 
 }
 
-function createDevicesList(device) {
-  const div = document.createElement('div');
-  div.className = 'card col-6';
 
-  const idlabel = document.createElement('label');
-  const statuslabel = document.createElement('label');
-  idlabel.innerText = 'Id';
-  statuslabel.innerText = 'Status';
-  const namelabel = document.createElement('label');
-  namelabel.innerText = 'Name';
-
-  const idInput = document.createElement('input');
-  const statusInput = document.createElement('input');
-  const nameInput = document.createElement('input');
-  nameInput.setAttribute('disabled', true);
-  nameInput.value = device.name || device.device_name; // Adjust property name accordingly
-
-  idInput.setAttribute('disabled', true);
-  statusInput.setAttribute('disabled', true);
-  idInput.value = device.device_id || device._id; // Adjust property name accordingly
-  statusInput.value = device.status || 'Ok';
-
-  const deleteButton = document.createElement('i');
-  deleteButton.className = 'bi bi-trash text-danger littleTrash';
-  deleteButton.style.float = 'right';
-  deleteButton.addEventListener('click', function () {
-    deviceController.deleteDevice(device.device_id || device._id); // Adjust property name accordingly
-    div.remove();
-  })
-
-  div.appendChild(deleteButton);
-  div.appendChild(namelabel);
-  div.appendChild(nameInput);
-
-  div.appendChild(idlabel);
-  div.appendChild(idInput);
-
-  // Uncomment the following lines if needed
-  div.appendChild(statuslabel);
-  div.appendChild(statusInput);
-
-  return div;
-}
 
 function toggleRegister(id) {
   event.preventDefault();
@@ -442,27 +388,8 @@ function newDeviceShowModal() {
 function newDevice() {
   const newDeviceId = document.getElementById('newDeviceId').value;
   if (newDeviceId.length > 0) {
-    createDeviceAjax({ device_id: newDeviceId, name: document.getElementById('newDeviceName').value });
+    deviceController.createDeviceAjax({ device_id: newDeviceId, name: document.getElementById('newDeviceName').value });
   }
-}
-function createDeviceAjax(data) {
-  return new Promise(function (resolve, reject) {
-    // Use jQuery's AJAX function
-    $.ajax({
-      url: `/devices/create`, // Adjust the URL to match your server route
-      method: 'POST',
-      data: data,
-      success: function (response) {
-        $('#newDeviceModal').modal('hide');
-        document.getElementById('devicesContainer').appendChild(createDevicesList(data));
-        resolve(response);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        // Reject the promise with an error message
-        reject(errorThrown);
-      }
-    });
-  });
 }
 function addRealTimeDataToChart(newValue) {
   let date = new Date();
@@ -534,6 +461,7 @@ async function changeTimeWindow(device_id, timeWindow) {
     if (!timeWindow) {
       timeWindow = getSelectedValueRadio();
     }
+    console.log(device)
     let response = await sensorController.getDeviceData(device.device_id, timeWindow);
     originalData = response;
     if (!chartLoaded) {
@@ -556,24 +484,7 @@ async function changeTimeWindow(device_id, timeWindow) {
 
 }
 
-function predictMoisture(data) {
-  return new Promise(function (resolve, reject) {
-    // Use jQuery's AJAX function
-    $.ajax({
-      url: `/api/predictMoisture`,
-      method: 'POST',
-      data: { data: data },
-      success: function (response) {
-        resolve(response);
-      },
-      error: function (jqXHR, textStatus, errorThrown) {
-        // Handle the error here
-        reject();
-        console.error('Error:', errorThrown);
-      }
-    });
-  });
-}
+
 
 async function getPredictedMoisture() {
   $('#predictionChartLoadingIcon').show();

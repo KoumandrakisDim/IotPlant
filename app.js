@@ -20,6 +20,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// dos attack
+const RateLimit = require('express-rate-limit');
+const MongoStore = require('rate-limit-mongo');
+
 const port = process.env.PORT || 3000;
 
 const server = app.listen(port, () => {
@@ -68,3 +72,13 @@ db.once('open', () => {
 // initializeApp(app, db);
 endpoints(app);
 // arduinoCommunication.arduinoData('Test data from main app');
+
+const limiter = new RateLimit({
+    store: new MongoStore({ uri: mongoURI }), // MongoDB connection string for storing rate limit data
+    max: 100, // Maximum number of requests allowed from a single IP
+    windowMs: 15 * 60 * 1000, // Time window for rate limiting (15 minutes in this example)
+    message: "Too many requests from this IP, please try again later."
+});
+
+// Apply the rate limiter middleware to all requests
+app.use(limiter);

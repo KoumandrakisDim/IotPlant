@@ -3,16 +3,38 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Phytonion</title>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
     integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/buttons.css">
 
-  <link rel="icon" href="assets/icons/logo.png">
+  <link rel="icon" href="assets/icons/plant2.png">
   <!-- Option 1: Include in HTML -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" crossorigin="anonymous"
+    href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css"
+    integrity="sha256-3oIi71IMpsoA+8ctSTIM+6ScXYjyZEV06q6bbK6CjsM=">
+  <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"
+    integrity="sha256-ELi2cs17gL2MqNzkRkogxZsVLmL+oWfeVOwZQLcp8ek="></script>
+
+
+  <link rel="stylesheet" crossorigin="anonymous"
+    href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css"
+    integrity="sha256-3oIi71IMpsoA+8ctSTIM+6ScXYjyZEV06q6bbK6CjsM=">
+  <script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="></script>
+  <script>
+    $.jgrid = $.jgrid || {};
+    $.jgrid.no_legacy_api = true;
+  </script>
+  <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"
+    integrity="sha256-ELi2cs17gL2MqNzkRkogxZsVLmL+oWfeVOwZQLcp8ek="></script>
 </head>
 
 <body>
@@ -25,7 +47,7 @@
 
     <div class="row d-flex justify-content-center d-none" id="registerPage">
 
-      <div class="col-6">
+      <div class="col-10 col-md-6 m-3">
 
         <form class="form needs-validation" id="form" novalidate>
           <span class="d-block" style="font-weight: bold;">Register</span>
@@ -81,47 +103,54 @@
       <div id="weatherContainer">
 
       </div>
-      <canvas class="mt-2 chart" id="devicesChart"></canvas>
-      <div class="buttonContainer justify-content-center d-flex">
-        <label class="form-check-label timeWindowButton" id="yearTimeWindowButton" value="year">
-          Year
-        </label>
-        <label class="form-check-label timeWindowButton" id="monthTimeWindowButton" value="month">
-          Month
-        </label>
-        <label class="form-check-label timeWindowButton" id="weekTimeWindowButton" value="week">
-          Week
-        </label>
-        <label class="form-check-label timeWindowButton" id="dayTimeWindowButton" value="day">
-          Day
-        </label>
-        <label class="form-check-label timeWindowButton" id="hourTimeWindowButton" value="hour">
-          Hour
-        </label>
-        <label class="form-check-label timeWindowButton" id="realTimeTimeWindowButton" value="realTime">
-          Real time
-        </label>
+      <div class="row">
+        <div class="col-12 col-md-6">
+          <canvas class="mt-2 chart" id="devicesChart"></canvas>
+          <div class="buttonContainer justify-content-center d-flex">
+            <label class="form-check-label timeWindowButton" id="yearTimeWindowButton" value="year">
+              Year
+            </label>
+            <label class="form-check-label timeWindowButton" id="monthTimeWindowButton" value="month">
+              Month
+            </label>
+            <label class="form-check-label timeWindowButton" id="weekTimeWindowButton" value="week">
+              Week
+            </label>
+            <label class="form-check-label timeWindowButton" id="dayTimeWindowButton" value="day">
+              Day
+            </label>
+            <label class="form-check-label timeWindowButton" id="hourTimeWindowButton" value="hour">
+              Hour
+            </label>
+            <label class="form-check-label timeWindowButton" id="realTimeTimeWindowButton" value="realTime">
+              Real time
+            </label>
 
-      </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 mt-2" id="predictionDiv">
+          <canvas class="chart" id="predictedMoistureChart"></canvas>
 
-      <!-- </div> -->
-      <!-- </div> -->
-      <div id="predictionDiv">
-        <button class="btn btn-secondary roundButton mt-2" id="predictMoistureButton"><i
-            class="bi bi-bootstrap-reboot d-block"></i></button>
-        <div class="chartContainer mt-2 ">
-            <canvas class="chart" id="predictedMoistureChart" style="width: 100% !important;height: 100% ;"></canvas>
-            <div class="spinner-container">
-              <div class="spinner-border" role="status" id="predictionChartLoadingIcon"></div>
-            </div>
+          <button class="btn btn-secondary roundButton" id="predictMoistureButton"><i
+              class="bi bi-bootstrap-reboot d-block"></i></button>
+          <!-- <div class="chartContainer mt-2 "> -->
+          <div class="spinner-container">
+            <div class="spinner-border" role="status" id="predictionChartLoadingIcon"></div>
+          </div>
+          <!-- </div> -->
         </div>
       </div>
+
+
+      <!-- </div> -->
+      <!-- </div> -->
+
 
     </div>
     <div class="fileContainer" id="profileContainer">
       <div class="row">
         <div class="col-6">
-          <label for="usernameView">Username</label>
+          <label for="usernameView" class="white">Username</label>
           <input type="text" id="usernameView" class="form-control">
         </div>
 
@@ -130,15 +159,15 @@
 
       </div>
 
-      <div class="row" style="min-height: 400px;">
+      <div class="row">
         <div class="col-6">
-          <span class="d-block">Weather Data</span>
+          <span class="d-block white">Weather Data</span>
           <label class="switch">
             <input type="checkbox" id="useWeatherButton">
             <span class="slider round"></span>
           </label>
           <div id="weatherFieldsContainer" style="display: none;">
-            <label for="city">City</label>
+            <label for="city" class="white">City</label>
             <input type="text" id="city" class="form-control">
             <button class="btn btn-primary mt-1" id="getUserLocationButton">Use my location</button>
 
@@ -159,14 +188,19 @@
       <div id="moistureDisplay" class="row p-3"></div>
 
       <button id="addDevice" class="btn btn-primary roundButton">+</button>
-      <div id="devicesContainer" class="row p-3"></div>
-      <span class="d-block">Save sensor data</span>
+      <div id="devicesContainer" class="mt-2">
+        <table id="devicesGrid"></table>
+        <div id="pager"></div>
+      </div>
+      <span class="d-block white">Save sensor data</span>
       <label class="switch">
         <input type="checkbox" id="toggleSaveSensorDataButton">
         <span class="slider round"></span>
       </label>
+
     </div>
   </div>
+
 
   <!-- Modal -->
   <div class="modal fade" id="newDeviceModal" tabindex="-1" role="dialog" aria-labelledby="newDeviceModalLabel"
@@ -194,13 +228,16 @@
   </div>
 </body>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
   integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"
-  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
+<!-- Include jQuery Migrate plugin -->
+<!-- <script src="assets/jqgrid/js/jquery-1.7.2.min.js"></script> -->
+
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jqgrid/5.8.5/js/jquery.jqGrid.min.js" integrity="sha512-9HBlNp4a1Zupxukgjxqm9n1YQEwLW8yx4po01H2G5xhesrJYLU9iuT3gn1yD/3q0CThNRyYKIzuMQzsz5Cq0gA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
 <script src="./controllers/profileController.js"></script>
 <script src="./controllers/sensorController.js"></script>
 <script src="./controllers/deviceController.js"></script>

@@ -19,9 +19,11 @@
     "chart.js": "^4.4.1",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-downsample": "^1.1.0",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.1",
     "ejs": "^3.1.9",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.2.0",
     "express-session": "^1.17.3",
     "johnny-five": "^2.1.0",
     "jquery": "^3.7.1",
@@ -29,6 +31,7 @@
     "node-cron": "^3.0.3",
     "path": "^0.12.7",
     "python-shell": "^5.0.0",
+    "rate-limit-mongo": "^2.3.2",
     "serialport": "^12.0.0",
     "socket.io": "^4.0.1"
   }

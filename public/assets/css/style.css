@@ -1,9 +1,27 @@
 body {
-    background-color: #a4cf81;
-    background-image: url('../icons/logo.png');
+    background-image: url('../icons/plant2.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
     background-repeat: no-repeat;
     background-position: top center;
-    background-size: cover;
+    /* background-size: cover; */
+    margin: 0;
+    padding: 0;
+    background-color: #829399;
+    /* background-size: auto 120%; */
+}
+
+@media screen and (max-width: 960px) {
+    body {
+        background-position: center center;
+    }
+}
+
+@media screen and (min-width: 960px) {
+    body {
+        background-position: center center;
+    }
 }
 
 #main {
@@ -17,11 +35,11 @@ body {
     padding: 15px;
 }
 
-.card {
+/* .card {
     background-color: #cccccc;
     border-radius: 15px;
     padding: 15px;
-}
+} */
 
 .roundButton {
     border-radius: 50%;
@@ -88,20 +106,18 @@ body {
     left: 50%;
     top: 126%;
 } */
-.chartContainer {
+#predictionDiv {
     position: relative;
 }
 
 .spinner-container {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
+    top: 50%; /* Position the child element 50% from the top of the parent */
+    left: 50%; /* Position the child element 50% from the left of the parent */
+    transform: translate(-50%, -50%); /* Center the child element exactly in the middle */
+    padding: 20px;
 }
+
 body {
     min-height: 900px;
 }
@@ -139,4 +155,36 @@ body {
     transition: background-color 0.3s ease;
     background-color: #fff;
     box-shadow: 1px 1px 0 1px #83a47a;
+}
+
+#profileContainer {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+#devicesFileContainer {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.white{
+    color: white;
+}
+
+#devicesContainer{
+    /* background-color: white; */
+    width: 100%;
+}
+
+#pager{
+    background-color: white;
+}
+
+.ui-jqgrid.ui-jqgrid-bootstrap{
+    border: none;
+}
+.card ui-jqgrid-view{
+    border-radius: 0;
 }

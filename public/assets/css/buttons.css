@@ -58,3 +58,8 @@ input:checked+.slider:before {
     border-radius: 50%;
 }
 
+#predictMoistureButton{
+    position: absolute;
+    top: 2px; /* Position the child element 10px from the top of the parent */
+    right: 15px; /* Position the child element 10px from the right of the parent */
+}

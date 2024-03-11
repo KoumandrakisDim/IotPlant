@@ -39,7 +39,10 @@ Open your web browser and navigate to http://localhost:3000 to access the applic
 Contributing
 Contributions are welcome! If you have suggestions, feature requests, or found a bug, please open an issue or submit a pull request.
 
+
+
+Image Creadit:
+https://pixlr.com/gr/image-generator/
+
 License
 This project is licensed under the MIT License.
-
-![smartPlantImage](https://github.com/KoumandrakisDim/IotPlant/assets/118050744/e3b70610-3db5-4b2a-ab2d-db30f03fc37f)

@@ -55,6 +55,7 @@ class ProfileController {
     }
 
     loginAjax(username, password) {
+
         return new Promise(function (resolve, reject) {
           // Use jQuery's AJAX function
           $.ajax({

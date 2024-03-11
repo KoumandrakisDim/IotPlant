@@ -7,6 +7,7 @@ const WeatherData = require('./models/weatherData');
 
 const Plant = mongoose.model('Plant', { user_id: String, device_id: String, status: String, name: String });
 const axios = require('axios');
+const crypto = require('crypto');
 
 // const dotenv = require('dotenv');
 // const result = dotenv.config();
@@ -121,7 +122,7 @@ async function endpoints(app) {
             return res.status(500).send('Internal Server Error');
         }
     });
-    app.get('/user/:userId/devices', async (req, res) => {
+    app.post('/user/:userId/devices', async (req, res) => {
         const userId = req.params.userId;
 
         try {
@@ -135,6 +136,68 @@ async function endpoints(app) {
             res.status(500).send('Internal Server Error');
         }
     });
+    app.post('/user/:userId/devicesGrid', async (req, res) => {
+        const userId = req.params.userId;
+
+        try {
+            // Retrieve devices for the specified user
+            let devices;
+            let filter = {}; // Initialize filter outside the if block
+            if (req.body._search) {
+                const searchField = req.body.searchField;
+                const searchString = req.body.searchString;
+                const searchOper = req.body.searchOper;
+
+                if (searchField && searchString && searchOper) {
+                    // Construct the filter based on the search parameters
+                    switch (searchOper) {
+                        case 'eq':
+                            filter[searchField] = searchString;
+                            break;
+                        case 'cn':
+                            filter[searchField] = { $regex: searchString, $options: 'i' }; // Case-insensitive search
+                            break;
+                        // Add other search operations as needed
+                    }
+                }
+            }
+
+            // Apply sorting and filtering to the devices query
+            let query = Plant.find({ user_id: userId });
+            if (filter) {
+                query = query.where(filter);
+            }
+
+            // Determine the sort order based on the request from jqGrid
+            const sortField = req.body.sidx;
+            const sortOrder = req.body.sord;
+            if (sortOrder === 'asc' || sortOrder === 'desc') {
+                query = query.sort({ [sortField]: sortOrder }); // Set the sort order based on the request
+            }
+
+            // Execute the query and retrieve the devices
+            devices = await query.exec();
+
+            // Modify the devices data to include a column for the delete button
+            const devicesWithDeleteButton = devices.map(device => {
+                return {
+                    user_id: device.user_id,
+                    device_id: device.device_id,
+                    name: device.name,
+                    status: device.status,
+                    deleteButton: `<i class='bi bi-trash text-danger' style='cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
+                };
+            });
+
+            // Return the modified data
+            res.json(devicesWithDeleteButton);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send("Internal Server Error");
+        }
+    });
+
+
     //save data
     app.post('/api/sensor-data', async (req, res) => {
         const { value } = req.body;
@@ -270,7 +333,7 @@ async function endpoints(app) {
         }
     });
 
-    app.post('/sensorData', async (req, res) => {
+    app.post('/sensorData', validateApiKey, async (req, res) => {
         const { sensorData } = req.body;
 
         let responseData = ''; // Assuming you have some data to send back
@@ -400,6 +463,33 @@ async function endpoints(app) {
         }
     });
 
+    app.post('/api/generateApiKey', async (req, res) => {
+        function generateApiKey(length) {
+            return crypto.randomBytes(length).toString('hex');
+        }
+
+        // Generate a random API key with 32 characters (16 bytes)
+        const apiKey = generateApiKey(16);
+        console.log(apiKey);
+        let data = req.body;
+        try {
+            if (!data || !data.id) {
+                return res.status(400).send('Invalid request body');
+            }
+            console.log(data.id)
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: data.id }, // Query condition
+                { api_key: apiKey }
+            );
+
+            // Send predictions as response
+            res.status(200).json({ apiKey });
+        } catch (error) {
+            console.error('Error:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    });
+
     app.post('/api/toggleSaveData', async (req, res) => {
         const data = req.body;
         console.log(data);
@@ -452,7 +542,37 @@ async function endpoints(app) {
         });
 
     }
+    async function validateApiKey(req, res, next) {
+        try {
+            // Retrieve the Authorization header from the request
+            const authHeader = req.headers.authorization;
 
+            // Check if the Authorization header is provided
+            if (!authHeader || !authHeader.startsWith("API_KEY ")) {
+                return res.status(401).json({ message: "Invalid API key format" });
+            }
+
+            // Extract the API key from the Authorization header
+            const apiKey = authHeader.split(" ")[1];
+
+            // Find the user with the provided API key
+            const user = await User.findOne({ apiKey });
+
+            // Check if the user exists
+            if (!user) {
+                return res.status(401).json({ message: "Invalid API key" });
+            }
+
+            // Attach the user object to the request for further processing
+            req.user = user;
+
+            // API key is valid, proceed to the next middleware or route handler
+            next();
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Internal server error" });
+        }
+    }
 
 
 }
