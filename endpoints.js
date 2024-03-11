@@ -51,25 +51,24 @@ async function endpoints(app) {
         }
 
         try {
-            // Retrieve username/email and password from the request body
-            const { username, password } = req.body;
-
-            // Retrieve user record from the database based on the provided username/email
             const user = await User.findOne({ username });
 
-            // Check if user exists and compare hashed passwords
-            if (user && await bcrypt.compare(password, user.passwordHash)) {
-                // Passwords match, authenticate the user
-                res.status(200).json({ message: "Login successful" });
+            if (user && await user.comparePassword(password)) {
+                req.session.user = user; // Store user information in the session
+                saveRealTimeData = user.toggleSaveSensorData;
+
+                // You can also send the user's ID as part of the response if needed
+                return res.json({ userId: user._id, user: user, message: 'Login successful', port: process.env.PORT || 3000 });
             } else {
-                // Invalid username/email or password
-                res.status(401).json({ message: "Invalid username/email or password" });
+                console.log('Invalid credentials for username:', username);
+                return res.status(401).send('Invalid username or password.');
             }
         } catch (error) {
             console.error('Error during login:', error);
             return res.status(500).send('Internal Server Error');
         }
     });
+
 
     app.get('/logout', (req, res) => {
         req.session.destroy(err => {
