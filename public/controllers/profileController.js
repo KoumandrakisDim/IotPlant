@@ -37,8 +37,8 @@ class ProfileController {
     });
   }
   getPredictedMoisture() {
-    const apiKey = localStorage.getItem('apiKey');
-
+    // const apiKey = localStorage.getItem('apiKey');
+    const apiKey = user.api_key;
     // Check if API key exists
     if (!apiKey) {
         // Reject the promise with an error message

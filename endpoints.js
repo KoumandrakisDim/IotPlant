@@ -336,12 +336,12 @@ async function endpoints(app) {
         }
     });
 
-    app.post('/sensorData', validateApiKey, async (req, res) => {
+    app.post('/sensorData', async (req, res) => {
         const { sensorData } = req.body;
 
         let responseData = ''; // Assuming you have some data to send back
         var receivedJson = req.body;
-
+        console.log(req.headers);
         try {
             if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
                 responseData = 'Temperature and humidity sensor not working';
@@ -453,7 +453,7 @@ async function endpoints(app) {
         }
     });
 
-    app.get('/api/predictMoisture', async (req, res) => {
+    app.get('/api/predictMoisture',  validateApiKey, async (req, res) => {
 
         try {
             let predictedMoisture = await predictMoisture(filteredWeatherData, lastMoistureValue);
@@ -557,6 +557,8 @@ async function endpoints(app) {
 
             // Extract the API key from the Authorization header
             const api_key = authHeader.split(" ")[1];
+            console.log('api_key');
+            console.log(api_key);
 
             // Find the user with the provided API key
             const user = await User.findOne({ api_key });

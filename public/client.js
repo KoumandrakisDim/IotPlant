@@ -17,6 +17,7 @@ const deviceController = new DeviceController();
 const profileController = new ProfileController();
 const profileView = new ProfileView();
 let fetchDataInterval;
+let user;
 
 function eventListeners() {
   document.getElementById('loginButton').addEventListener('click', function () {
@@ -67,10 +68,9 @@ async function login() {
   let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
 
   userId = response.userId;
-  console.log(userId)
   let userDevices = await deviceController.getDevices(userId);
   deviceController.loadDevicesGrid(userId);
-
+  user = response.user;
 
   // $('#devicesContainer').html(null);
 
