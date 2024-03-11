@@ -272,8 +272,10 @@ async function endpoints(app) {
 
                 // Reverse the order in your application code
                 const reversedData = latestData.reverse();
+                if (latestData[0]) {
+                    lastMoistureValue = latestData[0].moisture;
 
-                lastMoistureValue = latestData[0].moisture;
+                }
 
                 return res.json(reversedData);
             }
@@ -296,7 +298,7 @@ async function endpoints(app) {
                     downsampledData.push(fetchedData[i]); // Select every 'step' record from the fetched data
                 }
             }
-            lastMoistureValue
+            lastMoistureValue = downsampledData[downsampledData.length - 1].moisture;
             return res.json(downsampledData);
 
 
