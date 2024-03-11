@@ -41,7 +41,11 @@ Contributions are welcome! If you have suggestions, feature requests, or found a
 
 
 
-Image Creadit:
+
+
+![phytonion phone](https://github.com/KoumandrakisDim/IotPlant/assets/118050744/097fd64f-6433-4462-8277-562c9c68e4f9)
+![phytonion pc](https://github.com/KoumandrakisDim/IotPlant/assets/118050744/fcbdd789-0e6f-4aea-8192-0bb42fc2d5b3)
+Image background and logo Credit:
 https://pixlr.com/gr/image-generator/
 
 License
