@@ -556,10 +556,10 @@ async function endpoints(app) {
             }
 
             // Extract the API key from the Authorization header
-            const apiKey = authHeader.split(" ")[1];
+            const api_key = authHeader.split(" ")[1];
 
             // Find the user with the provided API key
-            const user = await User.findOne({ apiKey });
+            const user = await User.findOne({ api_key });
 
             // Check if the user exists
             if (!user) {

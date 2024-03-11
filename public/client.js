@@ -45,13 +45,14 @@ function eventListeners() {
   $('#monthTimeWindowButton').on('click', () => selectTimeWindowClick('monthTimeWindowButton', 'month'));
   $('#yearTimeWindowButton').on('click', () => selectTimeWindowClick('yearTimeWindowButton', 'year'));
   $(window).on('resize', function () {
-    console.log('resize')
-    let grid = $("#devicesContainer").children().eq(0);
-    console.log(grid)
-    let newWidth = grid.parent().width(); // Use parent() to select the parent container and width() method to get its width
-    $("#devicesGrid").jqGrid("setGridWidth", newWidth, true);
 
+    resizeGrid('devicesGrid', 'devicesContainer')
   });
+}
+function resizeGrid(id, parentId) {
+  let grid = $("#" + parentId).children().eq(0);
+  let newWidth = grid.parent().width(); // Use parent() to select the parent container and width() method to get its width
+  $("#" + id).jqGrid("setGridWidth", newWidth, true);
 }
 function selectTimeWindowClick(timeWindowButton, timeWindow) {
   let timeWindowButtons = document.querySelectorAll('.timeWindowButton');
@@ -69,6 +70,8 @@ async function login() {
   console.log(userId)
   let userDevices = await deviceController.getDevices(userId);
   deviceController.loadDevicesGrid(userId);
+
+
   // $('#devicesContainer').html(null);
 
   // userDevices.forEach(function (device) {
@@ -89,6 +92,10 @@ async function login() {
 
   fillUserProfileData(response.user);
   // socket = io('http://localhost:' + response.port);
+  setTimeout(() => {
+    resizeGrid('devicesGrid', 'devicesContainer');
+
+  }, 1100)
 
 }
 

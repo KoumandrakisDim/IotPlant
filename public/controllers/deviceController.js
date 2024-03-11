@@ -93,16 +93,14 @@ class DeviceController {
     $("#devicesGrid").jqGrid({
       url: `/user/${userId}/devicesGrid`,
       datatype: "json",
-      mtype: 'POST', // Use 'POST' method to send requests
-      colNames: ["id", "Name", "Status", "Action"], // Corrected column names
+      mtype: 'POST',
+      colNames: ["id", "Name", "Status", "Action"],
       colModel: [
-        { name: "device_id", index: "device_id", width: 100,align:'center', key: true }, // Added 'key: true' for primary key column
-        { name: "name", index: "name",align:'center', width: 100 },
-        { name: "status", index: "status",align:'center', width: 150 },
-        { name: "deleteButton", width: 100, sortable: false, search: false,align:'center', formatter: deleteButtonFormatter }
-
+        { name: "device_id", index: "device_id", width: 100, align: 'center', key: true },
+        { name: "name", index: "name", align: 'center', width: 100 },
+        { name: "status", index: "status", align: 'center', width: 150 },
+        { name: "deleteButton", width: 100, sortable: false, search: false, align: 'center', formatter: deleteButtonFormatter }
       ],
-
       height: 300,
       guiStyle: "bootstrap4",
       iconSet: "fontAwesome",
@@ -119,13 +117,12 @@ class DeviceController {
       searching: true,
       searching: {
         defaultSearch: "cn"
-      },
+      }
     });
-  };
+    function deleteButtonFormatter(cellValue, options, rowObject) {
+      // Return the HTML markup for the delete button
+      return cellValue;
+    }
+  }
 
-}
-function deleteButtonFormatter(cellValue, options, rowObject) {
-  // Return the HTML markup for the delete button
-  console.log(cellValue)
-  return cellValue;
 }

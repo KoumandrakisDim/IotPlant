@@ -175,7 +175,7 @@ body {
 
 #devicesContainer{
     /* background-color: white; */
-    width: 100%;
+    width: 100% !important;
 }
 
 #pager{
