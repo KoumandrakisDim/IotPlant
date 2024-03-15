@@ -1,18 +1,18 @@
-const { validationModule, validateApiKey } = require('../validation');
-const SensorData = require('../models/sensorData');
-const Plant = require('../models/device');
+const { validationModule, validateApiKey } = require('./validation');
+const SensorData = require('./models/sensorData');
+const Plant = require('./models/device');
 const axios = require('axios');
 let lastMoistureValue = 0;
 const bodyParser = require('body-parser');
-
+let deviceId;
+const { getFilteredWeatherData } = require('./controllers/userController');
+const User = require('../models/user');
 
 const deviceIPs = {};
 
 async function deviceController(app) {
 
     validationModule(app);
-
-    app.use(bodyParser.json());
 
     app.post('/devices/create', async (req, res) => {
         try {
@@ -50,8 +50,8 @@ async function deviceController(app) {
         try {
             // Retrieve devices for the specified user
             const devices = await Plant.find({ user_id: userId });
-
             // Send the devices as JSON
+            deviceId = devices[devices.length - 1].device_id;
             res.json(devices);
         } catch (error) {
             console.error('Error retrieving devices:', error);
@@ -197,8 +197,7 @@ async function deviceController(app) {
 
         const deviceId = req.params.id;
         const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
-        console.log(deviceId)
-        console.log(timeWindow)
+
 
         try {
 
@@ -335,18 +334,24 @@ async function deviceController(app) {
         return deviceIPs[deviceId];
     }
 
-    app.get('/api/predictMoisture', validateApiKey, async (req, res) => {
-        const deviceId = req.query.device_id; // Retrieve deviceId from query parameters
+    app.get('/api/predictMoisture',   async (req, res) => {
+        // const deviceId = req.query.device_id; // Retrieve deviceId from query parameters
+        console.log('predictMoisture')
 
         try {
-            if (!deviceId) {
-                return res.status(400).json({ error: 'Missing device_id in query parameters' });
-            }
+            // if (!deviceId) {
+            //     return res.status(400).json({ error: 'Missing device_id in query parameters' });
+            // }
 
-            let lastMoistureValue = await getLastMoistureValue(deviceId);
+            // let lastMoistureValue = await getLastMoistureValue(deviceId);
+            let filteredWeather = getFilteredWeatherData();
+            console.log('predictMoisture')
 
-            let predictedMoisture = await predictMoisture(filteredWeatherData, lastMoistureValue);
+            console.log(filteredWeather)
+            console.log(lastMoistureValue)
 
+            let predictedMoisture = await predictMoisture(filteredWeather, lastMoistureValue);
+            console.log(predictedMoisture)
             // Send predictions as response
             res.status(200).json({ predictedMoisture });
         } catch (error) {
@@ -356,20 +361,20 @@ async function deviceController(app) {
     });
 
     function getLastMoistureValue(deviceId) {
-        return new Promise(function (resolve, reject) {
-            let query = { device_id: deviceId };
-            // Assuming you have some mechanism to retrieve the last moisture value from a database or another data source
-            // For example, querying a MongoDB collection named "moistureData"
+        // return new Promise(function (resolve, reject) {
+        //     let query = { device_id: deviceId };
+        //     // Assuming you have some mechanism to retrieve the last moisture value from a database or another data source
+        //     // For example, querying a MongoDB collection named "moistureData"
 
-            // Assuming you have a MongoDB client initialized as "mongoClient"
-            const db = mongoClient.db('your_database_name');
-            const collection = db.collection('moistureData');
+        //     // Assuming you have a MongoDB client initialized as "mongoClient"
+        //     const db = mongoClient.db('your_database_name');
+        //     const collection = db.collection('moistureData');
 
-            // Assuming the "moistureData" collection has documents with a "deviceId" field and a "moistureValue" field
-            let lastMoisture = collection.findOne({ deviceId }, { sort: { _id: -1 } }); // Get the latest document for the given deviceId
+        //     // Assuming the "moistureData" collection has documents with a "deviceId" field and a "moistureValue" field
+        //     let lastMoisture = collection.findOne({ deviceId }, { sort: { _id: -1 } }); // Get the latest document for the given deviceId
 
-            resolve(lastMoisture)
-        });
+        //     resolve(lastMoisture)
+        // });
     }
 
     /**
@@ -400,6 +405,45 @@ async function deviceController(app) {
             });
         });
 
+    }
+
+    async function validateApiKey2(req, res, next) {
+        try {
+            // Retrieve the Authorization header from the request
+            const authHeader = req.headers.authorization;
+    
+            // Check if the Authorization header is provided
+            if (!authHeader || !authHeader.startsWith("API_KEY ")) {
+                return res.status(401).json({ message: "Invalid API key format" });
+            }
+    
+            // Extract the API key from the Authorization header
+            const api_key = authHeader.split(" ")[1];
+            console.log('api_key');
+            console.log(api_key);
+    
+            // Find the user with the provided API key
+            try {
+                const user = await User.findOne({ api_key });
+                // Check if the user exists
+                if (!user) {
+                    return res.status(401).json({ message: "Invalid API key" });
+                }
+    
+                // Attach the user object to the request for further processing
+                req.user = user;
+    
+                // API key is valid, proceed to the next middleware or route handler
+                next();
+            } catch (error) {
+                console.error('Error fetching user:', error);
+                // Handle the error (e.g., return an error response)
+            }
+    
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ message: "Internal server error" });
+        }
     }
 
 }

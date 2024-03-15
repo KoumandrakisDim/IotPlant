@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const User = require('../models/user');
 
 
 async function validationModule(app) {
@@ -48,18 +49,23 @@ async function validateApiKey(req, res, next) {
         console.log(api_key);
 
         // Find the user with the provided API key
-        const user = await User.findOne({ api_key });
+        try {
+            const user = await User.findOne({ api_key });
+            // Check if the user exists
+            if (!user) {
+                return res.status(401).json({ message: "Invalid API key" });
+            }
 
-        // Check if the user exists
-        if (!user) {
-            return res.status(401).json({ message: "Invalid API key" });
+            // Attach the user object to the request for further processing
+            req.user = user;
+
+            // API key is valid, proceed to the next middleware or route handler
+            next();
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            // Handle the error (e.g., return an error response)
         }
 
-        // Attach the user object to the request for further processing
-        req.user = user;
-
-        // API key is valid, proceed to the next middleware or route handler
-        next();
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Internal server error" });

@@ -10,6 +10,6 @@ const DeviceSchema = new mongoose.Schema({
   plantType: String,
   isOutdoors: Boolean
 });
-const device = mongoose.model('Device', DeviceSchema);
+const device = mongoose.model('Plant', DeviceSchema);
 
 module.exports = device;

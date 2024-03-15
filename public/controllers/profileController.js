@@ -4,7 +4,6 @@ class ProfileController {
       $.ajax({
         url: `/api/user/editProfile`, // Adjust the URL to match your server route
         method: 'POST',
-        data: data,
         contentType: 'application/json',
         data: JSON.stringify({ data }),
         success: function (response) {
@@ -23,7 +22,8 @@ class ProfileController {
       $.ajax({
         url: `/getWeather`,
         method: 'POST',
-        data: { user: user },
+        contentType: 'application/json',
+        data: JSON.stringify({ user }),
         success: function (response) {
           console.log(response)
           resolve(response);
@@ -41,14 +41,14 @@ class ProfileController {
     const apiKey = user.api_key;
     // Check if API key exists
     if (!apiKey) {
-        // Reject the promise with an error message
-        reject('API key is missing');
-        return;
+      // Reject the promise with an error message
+      reject('API key is missing');
+      return;
     }
 
     // Add the API key to the headers
     const headers = {
-        'Authorization': `API_KEY ${apiKey}`
+      'Authorization': `API_KEY ${apiKey}`
     };
     return new Promise(function (resolve, reject) {
       // Use jQuery's AJAX function
@@ -75,7 +75,8 @@ class ProfileController {
       $.ajax({
         url: '/login',
         method: 'POST',
-        data: { username: username, password: password },
+        contentType: 'application/json',
+        data: JSON.stringify({ username: username, password: password }),
         success: async function (response) {
 
           const apiKey = response.api_key;

@@ -15,8 +15,9 @@ const app = express();
 
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
-const { deviceController } = require('./controllers/deviceController');
+const { deviceController } = require('./deviceController');
 const { userController } = require('./controllers/userController');
+app.use(bodyParser.json());
 
 endpoints(app);
 deviceController(app);

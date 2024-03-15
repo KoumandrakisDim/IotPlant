@@ -2,13 +2,14 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const bodyParser = require('body-parser');
 const { validationModule } = require('../validation');
-
+const WeatherData = require('../models/weatherData'); 
+const axios = require('axios');
+let filteredWeatherData;
 
 async function userController(app) {
 
     validationModule(app);
 
-    app.use(bodyParser.json());
 
     app.post('/register', async (req, res) => {
         const { username, password, device_id } = req.body;
@@ -32,16 +33,16 @@ async function userController(app) {
     });
     app.post('/login', async (req, res) => {
         const { username, password } = req.body;
-
+        console.log(req.body)
         if (!username || !password) {
             return res.status(400).send('Username and password are required.');
         }
 
         try {
             const user = await User.findOne({ username });
-
+            console.log(user)
             if (user && await user.comparePassword(password)) {
-                req.session.user = user; // Store user information in the session
+                // req.session.user = user; // Store user information in the session
                 saveRealTimeData = user.toggleSaveSensorData;
 
                 // You can also send the user's ID as part of the response if needed
@@ -58,13 +59,13 @@ async function userController(app) {
 
 
     app.get('/logout', (req, res) => {
-        req.session.destroy(err => {
-            if (err) {
-                console.error('Error during logout:', err);
-                return res.status(500).send('Internal Server Error');
-            }
+        // req.session.destroy(err => {
+        //     if (err) {
+        //         console.error('Error during logout:', err);
+        //         return res.status(500).send('Internal Server Error');
+        //     }
             return res.status(200).send('Logged out successfully');
-        });
+        // });
     });
 
     //edit profile
@@ -92,6 +93,107 @@ async function userController(app) {
             res.status(500).send('Internal Server Error');
         }
     });
-}
 
-module.exports = { userController };
+    app.post('/getWeather', async (req, res) => {
+
+        const { user } = req.body;
+        console.log(user)
+        let response;
+        if (!user) {
+            return res.status(400).send('User info required.');
+        }
+
+        try {
+
+            if (user.latitude && user.longitude) {
+                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
+            }
+            else if (user.city) {
+
+                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
+            }
+            const data = response.data.list;
+            filteredWeatherData = filterWeatherVariables2(data);
+
+
+            res.json(response.data);
+
+
+        } catch (error) {
+            console.log(error)
+            // res.status(error.response.status).json(error.response.data);
+        }
+    });
+
+
+
+    app.post('/api/saveWeatherData', async (req, res) => {
+        const { data } = req.body;
+
+        try {
+            // Save the weather data to the database
+            const weatherDataEntries = data.weatherData.map(entry => {
+                return {
+                    humidity: entry.humidity,
+                    temperature: entry.temp,
+                    wind_speed: entry.wind,
+                    city: data.city,
+                };
+            });
+
+            await WeatherData.insertMany(weatherDataEntries);
+
+            res.status(200).send('Data received and saved.');
+        } catch (error) {
+            console.error('Error saving weather data:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
+    function filterWeatherVariables2(hourlyForecast) {
+        const dailyData = {};
+
+        hourlyForecast.forEach(hourlyData => {
+            const date = new Date(hourlyData.dt * 1000).toLocaleDateString('en-US');
+            if (!dailyData[date]) {
+                dailyData[date] = {
+                    temp: [],
+                    wind_speed: [],
+                    humidity: []
+                };
+            }
+            dailyData[date].temp.push(hourlyData.main.temp);
+            dailyData[date].wind_speed.push(hourlyData.wind.speed);
+            dailyData[date].humidity.push(hourlyData.main.humidity);
+        });
+
+        // Calculate average for each day
+        const forecastData = {
+            'Air temperature (C)': [],
+            'Wind speed (Km/h)': [],
+            'Air humidity (%)': []
+        };
+
+        for (const date in dailyData) {
+            if (dailyData.hasOwnProperty(date)) {
+                const tempSum = dailyData[date].temp.reduce((acc, curr) => acc + curr, 0);
+                const windSpeedSum = dailyData[date].wind_speed.reduce((acc, curr) => acc + curr, 0);
+                const humiditySum = dailyData[date].humidity.reduce((acc, curr) => acc + curr, 0);
+                const numDataPoints = dailyData[date].temp.length;
+                const avgTemp = tempSum / numDataPoints;
+                const avgWindSpeed = windSpeedSum / numDataPoints;
+                const avgHumidity = humiditySum / numDataPoints;
+
+                forecastData['Air temperature (C)'].push(avgTemp);
+                forecastData['Wind speed (Km/h)'].push(avgWindSpeed);
+                forecastData['Air humidity (%)'].push(avgHumidity);
+            }
+        }
+
+        return forecastData;
+    }
+}
+function getFilteredWeatherData(){
+    return filteredWeatherData;
+}
+module.exports = { userController, getFilteredWeatherData };
