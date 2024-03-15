@@ -6,7 +6,7 @@ let lastMoistureValue = 0;
 const bodyParser = require('body-parser');
 let deviceId;
 const { getFilteredWeatherData } = require('./controllers/userController');
-const User = require('../models/user');
+const User = require('./models/user');
 
 const deviceIPs = {};
 

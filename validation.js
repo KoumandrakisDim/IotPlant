@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const User = require('../models/user');
+const User = require('./models/user');
 
 
 async function validationModule(app) {
