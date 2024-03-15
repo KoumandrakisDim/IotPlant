@@ -317,24 +317,24 @@ async function deviceController(app) {
     });
 
     app.post('/api/device/getDeviceInfo', validateApiKey, (req, res) => {
-        const { data } = req.body;
-        console.log(data);
+        const { ip, device_id } = req.body;
 
-        if (!data.device_id || !data.ip) {
-            return res.status(400).json({ error: 'Missing device_id or ip' });
+        if (!ip || !device_id) {
+            return res.status(400).json({ error: 'Missing ip or device_id' });
         }
-        deviceIPs[data.ip] = data.device_id;
-        // Store IP address in database or memory
-        console.log(`Received IP address: ${data.ip}`);
+
+        // Store IP address and device ID in database or memory
+        console.log(`Received IP address: ${ip}, Device ID: ${device_id}`);
 
         res.sendStatus(200);
     });
+
 
     function getDeviceIP(deviceId) {
         return deviceIPs[deviceId];
     }
 
-    app.get('/api/predictMoisture',   async (req, res) => {
+    app.get('/api/predictMoisture', async (req, res) => {
         // const deviceId = req.query.device_id; // Retrieve deviceId from query parameters
         console.log('predictMoisture')
 
@@ -411,17 +411,17 @@ async function deviceController(app) {
         try {
             // Retrieve the Authorization header from the request
             const authHeader = req.headers.authorization;
-    
+
             // Check if the Authorization header is provided
             if (!authHeader || !authHeader.startsWith("API_KEY ")) {
                 return res.status(401).json({ message: "Invalid API key format" });
             }
-    
+
             // Extract the API key from the Authorization header
             const api_key = authHeader.split(" ")[1];
             console.log('api_key');
             console.log(api_key);
-    
+
             // Find the user with the provided API key
             try {
                 const user = await User.findOne({ api_key });
@@ -429,17 +429,17 @@ async function deviceController(app) {
                 if (!user) {
                     return res.status(401).json({ message: "Invalid API key" });
                 }
-    
+
                 // Attach the user object to the request for further processing
                 req.user = user;
-    
+
                 // API key is valid, proceed to the next middleware or route handler
                 next();
             } catch (error) {
                 console.error('Error fetching user:', error);
                 // Handle the error (e.g., return an error response)
             }
-    
+
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: "Internal server error" });
