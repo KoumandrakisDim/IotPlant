@@ -92,10 +92,8 @@ async function login() {
 
   fillUserProfileData(response.user);
   // socket = io('http://localhost:' + response.port);
-  setTimeout(() => {
-    resizeGrid('devicesGrid', 'devicesContainer');
+  
 
-  }, 1100)
 
 }
 

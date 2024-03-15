@@ -11,12 +11,20 @@ const cors = require('cors');
 const socketIo = require('socket.io');
 require('dotenv').config();
 
+const app = express();
+
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
+const { deviceController } = require('./controllers/deviceController');
+const { userController } = require('./controllers/userController');
+
+endpoints(app);
+deviceController(app);
+userController(app);
+
 // const { arduinoWebsocket } = require('./arduinoWebsocket');
 // const { aiModel } = require('./aiModel/ai');
 
-const app = express();
 app.use(express.json());
 app.use(cors());
 
@@ -64,14 +72,6 @@ db.on('error', (error) => {
 db.once('open', () => {
     console.log('Connected to MongoDB');
 });
-
-// Start the server
-
-// Setup WebSocket
-// setupWebSocket(server);
-// initializeApp(app, db);
-endpoints(app);
-// arduinoCommunication.arduinoData('Test data from main app');
 
 const limiter = rateLimit({
     store: new MongoStore({ uri: mongoURI }),
