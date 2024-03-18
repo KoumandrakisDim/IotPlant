@@ -5,6 +5,8 @@ const { validationModule } = require('../validation');
 const WeatherData = require('../models/weatherData'); 
 const axios = require('axios');
 let filteredWeatherData;
+const express = require('express');
+const session = require('express-session');
 
 async function userController(app) {
 
@@ -42,7 +44,7 @@ async function userController(app) {
             const user = await User.findOne({ username });
             console.log(user)
             if (user && await user.comparePassword(password)) {
-                // req.session.user = user; // Store user information in the session
+                req.session.user = user; // Store user information in the session
                 saveRealTimeData = user.toggleSaveSensorData;
 
                 // You can also send the user's ID as part of the response if needed
@@ -59,13 +61,13 @@ async function userController(app) {
 
 
     app.get('/logout', (req, res) => {
-        // req.session.destroy(err => {
-        //     if (err) {
-        //         console.error('Error during logout:', err);
-        //         return res.status(500).send('Internal Server Error');
-        //     }
+        req.session.destroy(err => {
+            if (err) {
+                console.error('Error during logout:', err);
+                return res.status(500).send('Internal Server Error');
+            }
             return res.status(200).send('Logged out successfully');
-        // });
+        });
     });
 
     //edit profile
@@ -129,7 +131,7 @@ async function userController(app) {
 
     app.post('/api/saveWeatherData', async (req, res) => {
         const { data } = req.body;
-
+        console.log(data)
         try {
             // Save the weather data to the database
             const weatherDataEntries = data.weatherData.map(entry => {

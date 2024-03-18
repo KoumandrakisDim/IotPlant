@@ -10,8 +10,15 @@ const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlan
 const cors = require('cors');
 const socketIo = require('socket.io');
 require('dotenv').config();
+const mqtt = require('mqtt');
 
 const app = express();
+
+app.use(session({
+    secret: 'TsifsaMotre',
+    resave: false,
+    saveUninitialized: true,
+}));
 
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
@@ -26,7 +33,6 @@ userController(app);
 // const { arduinoWebsocket } = require('./arduinoWebsocket');
 // const { aiModel } = require('./aiModel/ai');
 
-app.use(express.json());
 app.use(cors());
 
 // dos attack
@@ -43,12 +49,7 @@ const io = socketIo(server);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(session({
-    secret: 'TsifsaMotre',
-    resave: false,
-    saveUninitialized: true,
-}));
-app.use(express.json());
+
 
 mongoose.connect(mongoURI)
     .then(() => {
@@ -83,3 +84,41 @@ const limiter = rateLimit({
 
 // Apply the rate limiter middleware to all requests
 app.use(limiter);
+
+// MQTT broker connection options
+// const mqttOptions = {
+//     host: process.env.PORT || 3000,
+//     port: 1883,
+//     clientId: 'mqtt_api_client',
+//     username: 'mqtt_user',
+//     password: 'mqtt_password'
+// };
+
+// // Connect to MQTT broker
+// const mqttClient = mqtt.connect(mqttOptions);
+
+// // Handle MQTT connection events
+// mqttClient.on('connect', () => {
+//     console.log('Connected to MQTT broker');
+// });
+
+// mqttClient.on('error', (error) => {
+//     console.error('MQTT error:', error);
+// });
+
+// // API endpoint to send MQTT request to device
+// app.post('/sendMqttRequest', (req, res) => {
+//     const deviceId = req.body.deviceId;
+//     const message = req.body.message;
+
+//     // Publish message to device topic
+//     mqttClient.publish(`devices/${deviceId}`, message, (err) => {
+//         if (err) {
+//             console.error('Error publishing MQTT message:', err);
+//             res.status(500).json({ error: 'Failed to send MQTT request' });
+//         } else {
+//             console.log('MQTT message published');
+//             res.status(200).json({ message: 'MQTT request sent successfully' });
+//         }
+//     });
+// });

@@ -51,6 +51,7 @@ async function validateApiKey(req, res, next) {
         // Find the user with the provided API key
         try {
             const user = await User.findOne({ api_key });
+            console.log(user)
             // Check if the user exists
             if (!user) {
                 return res.status(401).json({ message: "Invalid API key" });

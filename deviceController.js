@@ -9,22 +9,50 @@ const { getFilteredWeatherData } = require('./controllers/userController');
 const User = require('./models/user');
 
 const deviceIPs = {};
+let saveRealTimeData;
 
 async function deviceController(app) {
 
     validationModule(app);
 
     app.post('/devices/create', async (req, res) => {
+        console.log(req.body)
         try {
             const result = await Plant.create({
                 name: req.body.name, user_id: req.session.user,
-                status: 'Ok', device_id: req.body.device_id
+                status: 'Not connected', device_id: req.body.device_id,
+                min_moisture: parseInt(req.body.minMoisture), max_moisture: parseInt(req.body.maxMoisture),
+                location: req.body.location, sampleRate: parseInt(req.body.sampleRate)
             });
 
             return res.status(200).send('Device created successfully');
 
         } catch (error) {
             console.error('Error creating device:', error);
+            return res.status(500).send('Internal Server Error');
+        }
+    });
+    app.post('/devices/edit', async (req, res) => {
+        console.log(req.body)
+        try {
+            let minMoisture = req.body.minMoisture || 50;
+            let maxMoisture = req.body.maxMoisture || 100;
+            let sampleRate = req.body.sampleRate || 20000;
+
+            const result = await Plant.findOneAndUpdate(
+                { device_id: req.body.device_id }, // Query condition
+                {
+                    name: req.body.name, user_id: req.session.user,
+                    status: 'Not connected', device_id: req.body.device_id,
+                    min_moisture: parseInt(minMoisture), max_moisture: parseInt(maxMoisture),
+                    location: req.body.location, sampleRate: parseInt(sampleRate)
+                },
+            );
+
+            return res.status(200).send('Device edited successfully');
+
+        } catch (error) {
+            console.error('Error editing device:', error);
             return res.status(500).send('Internal Server Error');
         }
     });
@@ -58,6 +86,26 @@ async function deviceController(app) {
             res.status(500).send('Internal Server Error');
         }
     });
+    app.get('/devices/get/:deviceId', async (req, res) => {
+        const deviceId = req.params.deviceId;
+        console.log(deviceId)
+        try {
+            if (!deviceId) {
+                return res.status(400).json({ error: 'DeviceId required' });
+            }
+            // Retrieve devices for the specified user
+            const device = await Plant.findOne({ device_id: deviceId });
+            console.log(device)
+            if (!device) {
+                return res.status(404).json({ error: 'Device not found' });
+            }
+            res.status(200).json(device);
+        } catch (error) {
+            console.error('Error retrieving devices:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
     app.post('/user/:userId/devicesGrid', async (req, res) => {
         const userId = req.params.userId;
 
@@ -107,8 +155,13 @@ async function deviceController(app) {
                     device_id: device.device_id,
                     name: device.name,
                     status: device.status,
-                    deleteButton: `<i class='bi bi-trash text-danger' style='cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
+                    minMoisture: device.min_moisture,
+                    maxMoisture: device.max_moisture,
+                    location: device.location,
+                    sampleRate: device.sampleRate,
+                    action: `<i class='bi bi-pencil text-primary' style='cursor:pointer;' onclick="devicesView.editDevice('${device.device_id}')"></i> | <i class='bi bi-trash text-danger' style='cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
                 };
+
             });
 
             // Return the modified data
@@ -151,8 +204,11 @@ async function deviceController(app) {
 
     app.post('/api/setDeviceSampleRate', validateApiKey, async (req, res) => {
         const data = req.body;
-        const apiKey = req.headers.api_key;
+        const authHeader = req.headers.authorization;
         const sample_rate = req.body.sample_rate;
+
+        const apiKey = authHeader.split(" ")[1];
+        console.log(apiKey)
 
         try {
             // Check if required data is present in the request
@@ -163,28 +219,42 @@ async function deviceController(app) {
                 return res.status(400).json({ error: 'Given sample_rate is too low. 1000 minimum' });
             }
             let deviceIp = getDeviceIP(data.device_id);
+            deviceIPs[deviceId]
+
+            console.log("deviceIp")
+            console.log(deviceIPs)
             console.log(deviceIp)
+
             if (!deviceIp) {
                 return res.status(404).json({ error: 'Device not found' });
             }
             // Make an API call to the NodeMCU device
-            const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
-                sampleRate: sample_rate
-            }, {
-                headers: {
-                    'API_KEY ': apiKey // Include the API key in the request headers
+            try {
+                const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
+                    sampleRate: sample_rate
+                }, {
+                    headers: {
+                        'Authorization': 'API_KEY ' + apiKey // Include the API key in the request headers
+                    }
+                });
+
+                // Check the response status code and handle accordingly
+                if (response.status === 200) {
+                    // API call successful, handle success response
+                    return res.status(200).json({ message: 'Sample rate updated successfully' });
+                } else {
+                    // API call failed, handle error response
+                    return res.status(500).json({ error: 'Failed to update sample rate on the device' });
                 }
-            });
-
-
-            // Check the response status code and handle accordingly
-            if (response.status === 200) {
-                // API call successful, handle success response
-                return res.status(200).json({ message: 'Sample rate updated successfully' });
-            } else {
-                // API call failed, handle error response
-                return res.status(500).json({ error: 'Failed to update sample rate on the device' });
+                // Process response here
+            } catch (error) {
+                console.error('Error making Axios request:', error);
+                // Handle the error appropriately
             }
+
+
+
+
 
         } catch (error) {
             console.error('Error:', error);
@@ -269,13 +339,22 @@ async function deviceController(app) {
         var receivedJson = req.body;
 
         try {
+            let status = 'Connected';
+            let sensorsWorking = 0;
             if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
                 responseData = 'Temperature and humidity sensor not working';
+            } else {
+                sensorsWorking++;
+            }
+            if (!('moisture' in receivedJson) || receivedJson.moisture > 100 || receivedJson.moisture < 0) {
+                responseData += 'moisture sensor not working';
+            } else {
+                sensorsWorking++;
             }
 
             const sensorData = new SensorData({
                 device_id: req.body.device_id, moisture: req.body.moisture,
-                humidity: req.body.humidity, temperature: req.body.temperature
+                humidity: req.body.humidity, temperature: req.body.temperature,
             });
 
             // Save the sensor data to the database
@@ -315,14 +394,23 @@ async function deviceController(app) {
             res.status(500).send('Internal Server Error');
         }
     });
-
-    app.post('/api/device/getDeviceInfo', validateApiKey, (req, res) => {
+    // device sends info here when turned on
+    app.post('/api/device/getDeviceInfo', validateApiKey, async (req, res) => {
         const { ip, device_id } = req.body;
+        console.log('getDeviceInfo')
+        console.log(device_id)
 
         if (!ip || !device_id) {
             return res.status(400).json({ error: 'Missing ip or device_id' });
         }
 
+        const result = await Plant.findOneAndUpdate(
+            { device_id: device_id }, // Query condition
+            {
+                status: 'Connected',
+            },
+        );
+        deviceIPs[device_id] = ip;
         // Store IP address and device ID in database or memory
         console.log(`Received IP address: ${ip}, Device ID: ${device_id}`);
 

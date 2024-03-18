@@ -16,6 +16,8 @@ const sensorController = new SensorController();
 const deviceController = new DeviceController();
 const profileController = new ProfileController();
 const profileView = new ProfileView();
+const devicesView = new DevicesView();
+
 let fetchDataInterval;
 let user;
 
@@ -92,7 +94,7 @@ async function login() {
 
   fillUserProfileData(response.user);
   // socket = io('http://localhost:' + response.port);
-  
+
 
 
 }
@@ -393,13 +395,29 @@ function toggleRegister(id) {
 
 
 function newDeviceShowModal() {
+  devicesView.clearDeviceFormFields();
+  document.getElementById('newDeviceModal').deviceId = '';
   $('#newDeviceModal').modal('show');
 }
 function newDevice() {
-  const newDeviceId = document.getElementById('newDeviceId').value;
-  if (newDeviceId.length > 0) {
-    deviceController.createDeviceAjax({ device_id: newDeviceId, name: document.getElementById('newDeviceName').value });
+  let deviceId = document.getElementById('newDeviceModal').deviceId;
+  if (deviceId) {
+    deviceController.editDevice({
+      device_id: deviceId, name: document.getElementById('newDeviceName').value, name: document.getElementById('newDeviceName').value,
+      minMoisture: document.getElementById('deviceMinMoistureInput').value, maxMoisture: document.getElementById('deviceMaxMoistureInput').value,
+      sampleRate: document.getElementById('deviceSampleRateInput').value, location: document.getElementById('deviceLocationInput').value
+    });
+  } else {
+    const newDeviceId = document.getElementById('newDeviceId').value;
+    if (newDeviceId.length > 0) {
+      deviceController.createDeviceAjax({
+        device_id: newDeviceId, name: document.getElementById('newDeviceName').value, name: document.getElementById('newDeviceName').value,
+        minMoisture: document.getElementById('deviceMinMoistureInput').value, maxMoisture: document.getElementById('deviceMaxMoistureInput').value,
+        sampleRate: document.getElementById('deviceSampleRateInput').value, location: document.getElementById('deviceLocationInput').value
+      });
+    }
   }
+
 }
 function addRealTimeDataToChart(newValue) {
   let date = new Date();

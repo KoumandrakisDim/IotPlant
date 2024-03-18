@@ -8,7 +8,9 @@ const DeviceSchema = new mongoose.Schema({
   min_moisture: Number,
   max_moisture: Number,
   plantType: String,
-  isOutdoors: Boolean
+  location: String,
+  sampleRate: Number,
+  sensorsWorking: Number
 });
 const device = mongoose.model('Plant', DeviceSchema);
 
