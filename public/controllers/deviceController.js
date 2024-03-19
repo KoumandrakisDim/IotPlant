@@ -59,6 +59,18 @@ class DeviceController {
     });
   }
   editDevice(data) {
+    const apiKey = localStorage.getItem('apiKey');
+
+    // Check if API key exists
+    if (!apiKey) {
+      // Reject the promise with an error message
+      reject('API key is missing');
+      return;
+    }
+    // Add the API key to the headers
+    const headers = {
+      'Authorization': `API_KEY ${apiKey}`
+    };
     return new Promise(function (resolve, reject) {
       // Use jQuery's AJAX function
       $.ajax({
@@ -66,6 +78,7 @@ class DeviceController {
         method: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
+        headers: headers,
         success: function (response) {
           $('#newDeviceModal').modal('hide');
           $("#devicesGrid").trigger("reloadGrid");
@@ -81,9 +94,22 @@ class DeviceController {
     });
   }
   deleteDevice(id) {
+    const apiKey = localStorage.getItem('apiKey');
+
+    // Check if API key exists
+    if (!apiKey) {
+      // Reject the promise with an error message
+      reject('API key is missing');
+      return;
+    }
+    // Add the API key to the headers
+    const headers = {
+      'Authorization': `API_KEY ${apiKey}`
+    };
     $.ajax({
       url: `/devices/delete/${id}`,
       method: 'DELETE',
+      headers: headers,
       success: function (response) {
         $("#devicesGrid").trigger("reloadGrid");
 
@@ -121,7 +147,6 @@ class DeviceController {
       reject('API key is missing');
       return;
     }
-
     // Add the API key to the headers
     const headers = {
       'Authorization': `API_KEY ${apiKey}`

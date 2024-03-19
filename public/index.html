@@ -91,7 +91,7 @@
             <a class="nav-link" style="cursor: pointer;;margin-left:10%;"
               onclick="showContainer('profileContainer')">Profile</a>
             <a class="nav-link" style="cursor: pointer;margin-left:10%;"
-              onclick="showContainer('devicesFileContainer'), resizeGrid('devicesGrid', 'devicesContainer');">Devices</a>
+              onclick="showContainer('devicesFileContainer'), resizeGrid('devicesGrid', 'devicesContainer');hideColumnsBasedOnScreenSize('devicesContainer');">Devices</a>
             <a class="nav-link" style="cursor: pointer;margin-left:10%;"
               onclick="profileController.logout()">Logout</a>
 
@@ -225,7 +225,7 @@
           <input class="form-control" id="deviceMinMoistureInput" maxlength="3">
           <label for="deviceMaxMoistureInput">Max moisture % (30 - 100)</label>
           <input class="form-control" id="deviceMaxMoistureInput" maxlength="3">
-          <label for="deviceSampleRateInput">Sample rate (milliseconds)</label>
+          <label for="deviceSampleRateInput">Sample rate (Seconds)</label>
           <input class="form-control" id="deviceSampleRateInput" maxlength="7">
           <label for="deviceLocationInput">Location</label>
           <select id="deviceLocationInput" class="form-select">

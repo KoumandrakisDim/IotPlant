@@ -40,7 +40,9 @@ class ProfileView {
 
         const div = document.createElement('div');
         div.className = 'row p-1';
-        data = filterWeatherVariables(data.list);
+        // data = filterWeatherVariables(data.list);
+        data = data.daily;
+
         console.log(data)
         // Assuming data.list is an array of forecast data
         if (data) {
@@ -65,14 +67,15 @@ class ProfileView {
         let iconUrl = profileView.getWeatherIconUrl(forecast);
         // Create HTML structure for the card
         card.innerHTML = `<div class="weather-card p-1">
-            <div class="card-header font15px">${forecast.date}</div>
+            <div class="card-header font15px">${convertUnixTimestamp(forecast.dt)}</div>
             <div class="card-body font15px">
-                <span> ${Number(temperature.toFixed(2))} °C</span>
+                <span> ${Number(forecast.temp.max.toFixed(2))}°C</span><span style='opacity:0.5'> ${Number(forecast.temp.min.toFixed(2))}°C</span>
                 <div class='d-flex justify-content-center'>
                     <img class='weatherIcon' src=${iconUrl}>
                 </div>
                 <span class='font11px'> Humidity: ${Number(forecast.humidity.toFixed(2))} %</span><br>
-                <span class='font11px'> Wind: ${Number(forecast.windSpeed.toFixed(2))} km/h</span>
+                <span class='font11px'> Wind: ${Number(forecast.wind_speed.toFixed(2))} km/h</span><br>
+                <span class='font11px'> Precipication probability: ${forecast.pop} %</span>
             </div>
             </div>
         `;
@@ -81,8 +84,8 @@ class ProfileView {
     }
 
     getWeatherIconUrl(data) {
-        let description = data.description[0];
-        let iconCode = data.icon[0];
+        let description = data.weather[0].description;
+        let iconCode = data.weather[0].icon;
         let isDaytime = profileView.isDaytimeIcon(iconCode);
         let clearSkyIcon;
         let scatteredCloudsIcon;

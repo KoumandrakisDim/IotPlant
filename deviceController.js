@@ -17,12 +17,17 @@ async function deviceController(app) {
 
     app.post('/devices/create', async (req, res) => {
         console.log(req.body)
+        let minMoisture = parseInt(req.body.minMoisture) || 50;
+        let maxMoisture = parseInt(req.body.maxMoisture) || 100;
+        let sampleRate = parseInt(req.body.sampleRate) || 20000;
+
         try {
+            validateDeviceFields(minMoisture, maxMoisture, sampleRate, res);
             const result = await Plant.create({
                 name: req.body.name, user_id: req.session.user,
                 status: 'Not connected', device_id: req.body.device_id,
-                min_moisture: parseInt(req.body.minMoisture), max_moisture: parseInt(req.body.maxMoisture),
-                location: req.body.location, sampleRate: parseInt(req.body.sampleRate)
+                min_moisture: minMoisture, max_moisture: maxMoisture,
+                location: req.body.location, sampleRate: sampleRate
             });
 
             return res.status(200).send('Device created successfully');
@@ -32,22 +37,52 @@ async function deviceController(app) {
             return res.status(500).send('Internal Server Error');
         }
     });
-    app.post('/devices/edit', async (req, res) => {
-        console.log(req.body)
+    function validateDeviceFields(minMoisture, maxMoisture, sampleRate) {
+        const errors = [];
+
+        if (minMoisture < 0 || minMoisture > 100) {
+            errors.push('Invalid minMoisture. 0 - 100');
+        }
+        if (maxMoisture < 0 || maxMoisture > 100) {
+            errors.push('Invalid maxMoisture. 0 - 100');
+        }
+        if (sampleRate < 1 || sampleRate > 1000) {
+            errors.push('Invalid sampleRate. 1 - 1000');
+        }
+
+        return errors;
+    }
+
+    app.post('/devices/edit', validateApiKey, async (req, res) => {
         try {
-            let minMoisture = req.body.minMoisture || 50;
-            let maxMoisture = req.body.maxMoisture || 100;
-            let sampleRate = req.body.sampleRate || 20000;
+            const minMoisture = parseInt(req.body.minMoisture) || 50;
+            const maxMoisture = parseInt(req.body.maxMoisture) || 100;
+            const sampleRate = parseInt(req.body.sampleRate) || 20000;
+            const deviceId = req.body.device_id;
+
+            const authHeader = req.headers.authorization;
+            const apiKey = authHeader.split(" ")[1];
+
+            const validationErrors = validateDeviceFields(minMoisture, maxMoisture, sampleRate);
+
+            if (validationErrors.length > 0) {
+                return res.status(400).json({ errors: validationErrors });
+            }
 
             const result = await Plant.findOneAndUpdate(
                 { device_id: req.body.device_id }, // Query condition
                 {
                     name: req.body.name, user_id: req.session.user,
-                    status: 'Not connected', device_id: req.body.device_id,
+                    status: 'Not connected', device_id: deviceId,
                     min_moisture: parseInt(minMoisture), max_moisture: parseInt(maxMoisture),
                     location: req.body.location, sampleRate: parseInt(sampleRate)
                 },
             );
+
+            const device = await Plant.findOne({ device_id: deviceId });
+            if (device.sampleRate !== sampleRate) {
+                setDeviceSampleRate(deviceId, sampleRate, apiKey);
+            }
 
             return res.status(200).send('Device edited successfully');
 
@@ -56,7 +91,8 @@ async function deviceController(app) {
             return res.status(500).send('Internal Server Error');
         }
     });
-    app.delete('/devices/delete/:id', async (req, res) => {
+
+    app.delete('/devices/delete/:id', validateApiKey, async (req, res) => {
         try {
 
             const result = await Plant.deleteOne({ device_id: req.params.id });
@@ -159,7 +195,7 @@ async function deviceController(app) {
                     maxMoisture: device.max_moisture,
                     location: device.location,
                     sampleRate: device.sampleRate,
-                    action: `<i class='bi bi-pencil text-primary' style='cursor:pointer;' onclick="devicesView.editDevice('${device.device_id}')"></i> | <i class='bi bi-trash text-danger' style='cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
+                    action: `<i class='bi bi-pencil text-primary' style='cursor:pointer;' onclick="devicesView.editDevice('${device.device_id}')"></i><i class='bi bi-trash text-danger' style='cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
                 };
 
             });
@@ -201,73 +237,111 @@ async function deviceController(app) {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     });
-
-    app.post('/api/setDeviceSampleRate', validateApiKey, async (req, res) => {
-        const data = req.body;
-        const authHeader = req.headers.authorization;
-        const sample_rate = req.body.sample_rate;
-
-        const apiKey = authHeader.split(" ")[1];
-        console.log(apiKey)
-
+    /**
+     * deviceId
+     * sampleRate
+     * apiKey
+     */
+    async function setDeviceSampleRate(deviceId, sampleRate, apiKey) {
         try {
-            // Check if required data is present in the request
-            if (!data.device_id || !sample_rate) {
-                return res.status(400).json({ error: 'Missing device_id or sample_rate' });
+            // Check if required data is present
+            if (!deviceId || !sampleRate || !apiKey) {
+                throw new Error('Missing device_id, sample_rate, or apiKey');
             }
-            if (sample_rate < 1000) {
-                return res.status(400).json({ error: 'Given sample_rate is too low. 1000 minimum' });
+
+            // Perform sample_rate validation
+            if (sampleRate < 1) {
+                throw new Error('Given sample_rate is too low. 1 minimum');
             }
-            let deviceIp = getDeviceIP(data.device_id);
-            deviceIPs[deviceId]
 
-            console.log("deviceIp")
-            console.log(deviceIPs)
-            console.log(deviceIp)
-
+            let deviceIp = getDeviceIP(deviceId);
             if (!deviceIp) {
-                return res.status(404).json({ error: 'Device not found' });
+                throw new Error('Device not found');
             }
+
             // Make an API call to the NodeMCU device
-            try {
-                const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
-                    sampleRate: sample_rate
-                }, {
-                    headers: {
-                        'Authorization': 'API_KEY ' + apiKey // Include the API key in the request headers
-                    }
-                });
-
-                // Check the response status code and handle accordingly
-                if (response.status === 200) {
-                    // API call successful, handle success response
-                    return res.status(200).json({ message: 'Sample rate updated successfully' });
-                } else {
-                    // API call failed, handle error response
-                    return res.status(500).json({ error: 'Failed to update sample rate on the device' });
+            const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
+                sampleRate: sampleRate * 1000
+            }, {
+                headers: {
+                    'Authorization': 'API_KEY ' + apiKey // Include the API key in the request headers
                 }
-                // Process response here
-            } catch (error) {
-                console.error('Error making Axios request:', error);
-                // Handle the error appropriately
+            });
+
+            // Check the response status code and handle accordingly
+            if (response.status === 200) {
+                // API call successful, handle success response
+                return { success: true, message: 'Sample rate updated successfully' };
+            } else {
+                // API call failed, handle error response
+                throw new Error('Failed to update sample rate on the device');
             }
-
-
-
-
-
         } catch (error) {
-            console.error('Error:', error);
-            return res.status(500).json({ error: 'Internal Server Error' });
+            console.error('Error setting device sample rate:', error.message);
+            throw error; // Re-throw the error for the caller to handle
         }
-    });
+    }
+
+    // Example usage:
+    // setDeviceSampleRate(data.device_id, sample_rate, apiKey);
+
+    // app.post('/api/setDeviceSampleRate', validateApiKey, async (req, res) => {
+    //     const data = req.body;
+    //     const authHeader = req.headers.authorization;
+    //     const sample_rate = req.body.sample_rate;
+
+    //     const apiKey = authHeader.split(" ")[1];
+    //     console.log(apiKey)
+
+    //     try {
+    //         // Check if required data is present in the request
+    //         if (!data.device_id || !sample_rate) {
+    //             return res.status(400).json({ error: 'Missing device_id or sample_rate' });
+    //         }
+    //         if (sample_rate < 1000) {
+    //             return res.status(400).json({ error: 'Given sample_rate is too low. 1000 minimum' });
+    //         }
+    //         let deviceIp = getDeviceIP(data.device_id);
+    //         deviceIPs[deviceId]
+
+    //         if (!deviceIp) {
+    //             return res.status(404).json({ error: 'Device not found' });
+    //         }
+    //         // Make an API call to the NodeMCU device
+    //         try {
+    //             const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
+    //                 sampleRate: sample_rate
+    //             }, {
+    //                 headers: {
+    //                     'Authorization': 'API_KEY ' + apiKey // Include the API key in the request headers
+    //                 }
+    //             });
+
+    //             // Check the response status code and handle accordingly
+    //             if (response.status === 200) {
+    //                 // API call successful, handle success response
+    //                 return res.status(200).json({ message: 'Sample rate updated successfully' });
+    //             } else {
+    //                 // API call failed, handle error response
+    //                 return res.status(500).json({ error: 'Failed to update sample rate on the device' });
+    //             }
+    //             // Process response here
+    //         } catch (error) {
+    //             console.error('Error making Axios request:', error);
+    //             // Handle the error appropriately
+    //         }
+
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //         return res.status(500).json({ error: 'Internal Server Error' });
+    //     }
+    // });
 
     // Route to retrieve latest sensor data
     app.post('/api/getSensorData/:id', async (req, res) => {
 
         const deviceId = req.params.id;
         const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
-
 
         try {
 
@@ -302,11 +376,13 @@ async function deviceController(app) {
                 return res.json(reversedData);
             }
 
+
             // Filter out documents with missing or invalid timestamps
             // query.timestamp = { $gte: new Date(), $type: 'date' };
             // Fetch data based on the adjusted query
             let fetchedData = await SensorData.find(query);
-
+            console.log(query)
+            console.log(fetchedData)
             // Downsample the fetched data to a smaller set
             let downsampledData = [];
             const totalRecords = fetchedData.length;
@@ -320,7 +396,14 @@ async function deviceController(app) {
                     downsampledData.push(fetchedData[i]); // Select every 'step' record from the fetched data
                 }
             }
-            lastMoistureValue = downsampledData[downsampledData.length - 1].moisture;
+
+            if (downsampledData.length > 0) {
+                if ('moisture' in downsampledData[downsampledData.length - 1]) {
+                    lastMoistureValue = downsampledData[downsampledData.length - 1].moisture;
+
+                }
+            }
+
             return res.json(downsampledData);
 
 
@@ -337,45 +420,56 @@ async function deviceController(app) {
 
         let responseData = ''; // Assuming you have some data to send back
         var receivedJson = req.body;
+        const device_id = req.body.device_id;
 
-        try {
-            let status = 'Connected';
-            let sensorsWorking = 0;
-            if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
-                responseData = 'Temperature and humidity sensor not working';
-            } else {
-                sensorsWorking++;
-            }
-            if (!('moisture' in receivedJson) || receivedJson.moisture > 100 || receivedJson.moisture < 0) {
-                responseData += 'moisture sensor not working';
-            } else {
-                sensorsWorking++;
-            }
+        if (saveRealTimeData) {
 
-            const sensorData = new SensorData({
-                device_id: req.body.device_id, moisture: req.body.moisture,
-                humidity: req.body.humidity, temperature: req.body.temperature,
-            });
+            try {
+                let status = 'Connected';
+                let sensorsWorking = 0;
+                if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
+                    responseData = 'Temperature and humidity sensor not working';
+                } else {
+                    sensorsWorking++;
+                }
+                if (!('moisture' in receivedJson) || receivedJson.moisture > 100 || receivedJson.moisture < 0) {
+                    responseData += 'moisture sensor not working';
+                } else {
+                    sensorsWorking++;
+                }
 
-            // Save the sensor data to the database
-            if (saveRealTimeData) {
+                const fieldsToSave = { device_id };
+
+                // Loop through the request body and add all the fields to the fieldsToSave object
+                for (const key in req.body) {
+                    // Exclude device_id as it's handled separately
+                    if (key !== 'device_id') {
+                        fieldsToSave[key] = req.body[key];
+                    }
+                }
+
+                // Save the data to the database
+                const sensorData = new SensorData(fieldsToSave);
+                await sensorData.save();
+
+                // Save the sensor data to the database
                 sensorData.save()
                     .then(() => {
-                        // console.log('Sensor data saved to the database');
+                        console.log('Sensor data saved to the database');
                     })
                     .catch((error) => {
                         console.error('Error saving sensor data to the database:', error);
                     });
+
+                // Process the request and generate the response data
+
+                // Send the response data back to the client
+                res.json(responseData);
+            } catch (error) {
+                // Handle any errors that occurred during processing
+                console.error('Error processing request:', error);
+                res.status(500).json({ error: 'Internal Server Error' });
             }
-
-            // Process the request and generate the response data
-
-            // Send the response data back to the client
-            res.json(responseData);
-        } catch (error) {
-            // Handle any errors that occurred during processing
-            console.error('Error processing request:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
         }
     });
 

@@ -48,9 +48,37 @@ function eventListeners() {
   $('#monthTimeWindowButton').on('click', () => selectTimeWindowClick('monthTimeWindowButton', 'month'));
   $('#yearTimeWindowButton').on('click', () => selectTimeWindowClick('yearTimeWindowButton', 'year'));
   $(window).on('resize', function () {
-
+    hideColumnsBasedOnScreenSize('devicesContainer');
     resizeGrid('devicesGrid', 'devicesContainer')
   });
+}
+function hideColumnsBasedOnScreenSize(parentId) {
+  // let grid = $("#" + parentId).children().eq(0);
+  //   var screenWidth = $(window).width();
+  //   console.log(grid)
+  // // Define your breakpoint for hiding columns (adjust as needed)
+  // var breakpoint = 768; // For example, hide columns on screens smaller than 768px
+  
+  // // Get the jqGrid instance
+  // var colModel = grid.jqGrid('getGridParam', 'colModel');
+  
+  // // Check the screen size and hide/show columns accordingly
+  // if (screenWidth < breakpoint) {
+  //   // Hide columns
+  //   for (var i = 0; i < colModel.length; i++) {
+  //     var colName = colModel[i].name;
+  //     grid.hideCol(colName);
+  //     console.log(colName)
+  //     grid.closest(".ui-jqgrid-view").find("th[aria-describedby='" + grid[0].id + "_" + colName + "']").hide();
+  //   }
+  // } else {
+  //   // Show columns
+  //   for (var i = 0; i < colModel.length; i++) {
+  //     var colName = colModel[i].name;
+  //     grid.showCol(colName);
+  //     grid.closest(".ui-jqgrid-view").find("th[aria-describedby='" + grid[0].id + "_" + colName + "']").show();
+  //   }
+  // }
 }
 function resizeGrid(id, parentId) {
   let grid = $("#" + parentId).children().eq(0);
@@ -489,9 +517,10 @@ async function changeTimeWindow(device_id, timeWindow) {
     if (!timeWindow) {
       timeWindow = getSelectedValueRadio();
     }
-    console.log(device)
     let response = await sensorController.getDeviceData(device.device_id, timeWindow);
     originalData = response;
+    console.log(originalData)
+
     if (!chartLoaded) {
       loadChart(response);
       chartLoaded = true;

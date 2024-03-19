@@ -79,8 +79,7 @@ class ProfileController {
         data: JSON.stringify({ username: username, password: password }),
         success: async function (response) {
 
-          const apiKey = response.api_key;
-
+          const apiKey = response.user.api_key;
           // Store the API key securely (e.g., in localStorage or sessionStorage)
           localStorage.setItem('apiKey', apiKey);
 

@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 const bodyParser = require('body-parser');
 const { validationModule } = require('../validation');
-const WeatherData = require('../models/weatherData'); 
+const WeatherData = require('../models/weatherData');
 const axios = require('axios');
 let filteredWeatherData;
 const express = require('express');
@@ -108,14 +108,17 @@ async function userController(app) {
         try {
 
             if (user.latitude && user.longitude) {
-                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
+                response = await axios.get(`https://api.openweathermap.org/data/3.0/onecall?lat=${user.latitude}&lon=${user.longitude}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
             }
             else if (user.city) {
+                let coordinates;
 
-                response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast?q=${user.city}&units=metric&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
+                coordinates = await axios.get(`http://api.openweathermap.org/geo/1.0/direct?q=${user.city}&limit=1&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
+                response = await axios.get(`https://api.openweathermap.org/data/3.0/onecall?lat=${coordinates.data[0].lat}&lon=${coordinates.data[0].lon}&units=metric&exclude=current,minutely,hourly&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
             }
             const data = response.data.list;
-            filteredWeatherData = filterWeatherVariables2(data);
+            // filteredWeatherData = filterWeatherVariables2(data);
+            filteredWeatherData = data;
 
 
             res.json(response.data);
@@ -123,6 +126,9 @@ async function userController(app) {
 
         } catch (error) {
             console.log(error)
+
+            return res.status(500).send(error);
+
             // res.status(error.response.status).json(error.response.data);
         }
     });
@@ -195,7 +201,7 @@ async function userController(app) {
         return forecastData;
     }
 }
-function getFilteredWeatherData(){
+function getFilteredWeatherData() {
     return filteredWeatherData;
 }
 module.exports = { userController, getFilteredWeatherData };

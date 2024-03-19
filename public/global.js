@@ -186,9 +186,24 @@ function saveDailyWeatherData(weatherData) {
     }
 }
 
+function convertUnixTimestamp(timestamp) {
+    // Convert Unix timestamp to milliseconds by multiplying by 1000
+    const milliseconds = timestamp * 1000;
+    
+    // Create a new Date object using the milliseconds
+    const dateObject = new Date(milliseconds);
+    
+    // Get day, month, and year from the date object
+    const day = dateObject.getDate().toString().padStart(2, '0'); // Add leading zero if needed
+    const month = (dateObject.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
+    const year = dateObject.getFullYear();
+    
+    // Return the formatted date string (dd/mm/yyyy)
+    return `${day}/${month}/${year}`;
+}
 function filterWeatherVariables(hourlyForecast) {
     const dailyData = {};
-
+    console.log(hourlyForecast)
     hourlyForecast.forEach(hourlyData => {
         const date = new Date(hourlyData.dt * 1000).toLocaleDateString('en-US');
         if (!dailyData[date]) {
@@ -197,6 +212,7 @@ function filterWeatherVariables(hourlyForecast) {
                 wind_speed: [],
                 humidity: [],
                 description: [],
+                pop: [],
                 icon: []
             };
         }
@@ -204,6 +220,8 @@ function filterWeatherVariables(hourlyForecast) {
         dailyData[date].wind_speed.push(hourlyData.wind.speed);
         dailyData[date].humidity.push(hourlyData.main.humidity);
         dailyData[date].description.push(hourlyData.weather[0].description);
+        dailyData[date].pop.push(hourlyData.pop);
+
         dailyData[date].icon.push(hourlyData.weather[0].icon);
 
     });
@@ -216,10 +234,13 @@ function filterWeatherVariables(hourlyForecast) {
             const tempSum = dailyData[date].temp.reduce((acc, curr) => acc + curr, 0);
             const windSpeedSum = dailyData[date].wind_speed.reduce((acc, curr) => acc + curr, 0);
             const humiditySum = dailyData[date].humidity.reduce((acc, curr) => acc + curr, 0);
+            const popSum = dailyData[date].pop.reduce((acc, curr) => acc + curr, 0);
+
             const numDataPoints = dailyData[date].temp.length;
             const avgTemp = tempSum / numDataPoints;
             const avgWindSpeed = windSpeedSum / numDataPoints;
             const avgHumidity = humiditySum / numDataPoints;
+            const avgPop = popSum / numDataPoints;
 
             forecastData.push({
                 date: date,
@@ -227,7 +248,8 @@ function filterWeatherVariables(hourlyForecast) {
                 windSpeed: avgWindSpeed,
                 humidity: avgHumidity,
                 description: dailyData[date].description,
-                icon: dailyData[date].icon
+                icon: dailyData[date].icon,
+                pop: avgPop
 
             });
         }
