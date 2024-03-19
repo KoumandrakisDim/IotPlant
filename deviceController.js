@@ -1,11 +1,11 @@
-const { validationModule, validateApiKey } = require('./validation');
+const { validationModule, validateApiKey} = require('./validation');
 const SensorData = require('./models/sensorData');
 const Plant = require('./models/device');
 const axios = require('axios');
 let lastMoistureValue = 0;
 const bodyParser = require('body-parser');
 let deviceId;
-const { getFilteredWeatherData } = require('./controllers/userController');
+const { getFilteredWeatherData, getSaveRealTimeData  } = require('./controllers/userController');
 const User = require('./models/user');
 
 const deviceIPs = {};
@@ -421,8 +421,8 @@ async function deviceController(app) {
         let responseData = ''; // Assuming you have some data to send back
         var receivedJson = req.body;
         const device_id = req.body.device_id;
-
-        if (saveRealTimeData) {
+        console.log(saveRealTimeData)
+        if (getSaveRealTimeData()) {
 
             try {
                 let status = 'Connected';
@@ -470,6 +470,8 @@ async function deviceController(app) {
                 console.error('Error processing request:', error);
                 res.status(500).json({ error: 'Internal Server Error' });
             }
+        }else{
+            res.status(200).json({ error: 'Data not saved' });
         }
     });
 

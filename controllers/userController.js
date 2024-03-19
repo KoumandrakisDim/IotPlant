@@ -7,6 +7,7 @@ const axios = require('axios');
 let filteredWeatherData;
 const express = require('express');
 const session = require('express-session');
+var saveRealTimeData;
 
 async function userController(app) {
 
@@ -200,8 +201,13 @@ async function userController(app) {
 
         return forecastData;
     }
+
+
 }
 function getFilteredWeatherData() {
     return filteredWeatherData;
 }
-module.exports = { userController, getFilteredWeatherData };
+function getSaveRealTimeData() {
+    return saveRealTimeData;
+}
+module.exports = { userController, getFilteredWeatherData, getSaveRealTimeData };
