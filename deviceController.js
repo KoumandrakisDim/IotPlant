@@ -1,11 +1,11 @@
-const { validationModule, validateApiKey} = require('./validation');
+const { validationModule, validateApiKey } = require('./validation');
 const SensorData = require('./models/sensorData');
 const Plant = require('./models/device');
 const axios = require('axios');
 let lastMoistureValue = 0;
 const bodyParser = require('body-parser');
 let deviceId;
-const { getFilteredWeatherData, getSaveRealTimeData  } = require('./controllers/userController');
+const { getFilteredWeatherData, getSaveRealTimeData } = require('./controllers/userController');
 const User = require('./models/user');
 
 const deviceIPs = {};
@@ -69,19 +69,23 @@ async function deviceController(app) {
                 return res.status(400).json({ errors: validationErrors });
             }
 
+            const device = await Plant.findOne({ device_id: deviceId });
+            console.log(device.sampleRate)
+            console.log(sampleRate)
+
             const result = await Plant.findOneAndUpdate(
                 { device_id: req.body.device_id }, // Query condition
                 {
-                    name: req.body.name, user_id: req.session.user,
-                    status: 'Not connected', device_id: deviceId,
+                    device_id: deviceId,
                     min_moisture: parseInt(minMoisture), max_moisture: parseInt(maxMoisture),
                     location: req.body.location, sampleRate: parseInt(sampleRate)
                 },
             );
 
-            const device = await Plant.findOne({ device_id: deviceId });
+
+
             if (device.sampleRate !== sampleRate) {
-                setDeviceSampleRate(deviceId, sampleRate, apiKey);
+                await setDeviceSampleRate(deviceId, sampleRate, apiKey);
             }
 
             return res.status(200).send('Device edited successfully');
@@ -259,6 +263,9 @@ async function deviceController(app) {
                 throw new Error('Device not found');
             }
 
+            console.log('sample rate updated.')
+
+
             // Make an API call to the NodeMCU device
             const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
                 sampleRate: sampleRate * 1000
@@ -271,6 +278,8 @@ async function deviceController(app) {
             // Check the response status code and handle accordingly
             if (response.status === 200) {
                 // API call successful, handle success response
+                console.log('sample rate updated.')
+                console.log(sampleRate);
                 return { success: true, message: 'Sample rate updated successfully' };
             } else {
                 // API call failed, handle error response
@@ -450,12 +459,14 @@ async function deviceController(app) {
 
                 // Save the data to the database
                 const sensorData = new SensorData(fieldsToSave);
-                await sensorData.save();
+                // await sensorData.save();
 
                 // Save the sensor data to the database
                 sensorData.save()
                     .then(() => {
                         console.log('Sensor data saved to the database');
+                        res.json(responseData);
+
                     })
                     .catch((error) => {
                         console.error('Error saving sensor data to the database:', error);
@@ -464,13 +475,12 @@ async function deviceController(app) {
                 // Process the request and generate the response data
 
                 // Send the response data back to the client
-                res.json(responseData);
             } catch (error) {
                 // Handle any errors that occurred during processing
                 console.error('Error processing request:', error);
                 res.status(500).json({ error: 'Internal Server Error' });
             }
-        }else{
+        } else {
             res.status(200).json({ error: 'Data not saved' });
         }
     });

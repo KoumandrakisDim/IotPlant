@@ -90,7 +90,7 @@ function getSelectedValueRadio(name) {
     let timeWindowButtons = document.querySelectorAll('.timeWindowButton');
 
     timeWindowButtons.forEach(function (button) {
-        if(button.classList.contains('selectedTimeWindow')){
+        if (button.classList.contains('selectedTimeWindow')) {
             console.log(button.getAttribute('value'))
             return button.getAttribute('value');
         }
@@ -120,25 +120,31 @@ function showAlert(alertId, alertText, className) {
 // Assume the OpenWeatherMap API returns data in the format you provided earlier
 // Modify this function based on the actual structure of the data returned by the API
 function filterTodayWeather(data) {
-    const todayDateString = new Date().toISOString().split('T')[0];
-    const city = data.city.name;
+    // const todayDateString = new Date().toISOString().split('T')[0];
+    // const city = data.city;
+    // const todayWeatherData = data.list.filter(entry => {
+    //     const entryDateString = new Date(entry.dt * 1000).toISOString().split('T')[0];
+    //     return entryDateString === todayDateString;
+    // });
+    const todayWeatherData = data.daily[0];
+    const lat = data.lat;
+    const lon = data.lon;
 
-    const todayWeatherData = data.list.filter(entry => {
-        const entryDateString = new Date(entry.dt * 1000).toISOString().split('T')[0];
-        return entryDateString === todayDateString;
-    });
-
-    return { city, todayWeatherData };
+    return { lat, lon, todayWeatherData };
 }
 
 // Assume the OpenWeatherMap API returns data in the format you provided earlier
 // Modify this function based on the actual structure of the data returned by the API
 function weatherDataToJSON(data) {
     let jsonData = [];
-    data.todayWeatherData.forEach(entry => {
-        let weatherData = { humidity: entry.main.humidity, temp: entry.main.temp, wind: entry.wind.speed, dt: entry.dt_text };
-        jsonData.push(weatherData);
-    });
+    // data.todayWeatherData.forEach(entry => {
+    let weatherData = {
+        humidity: data.todayWeatherData.humidity, tempMin: data.todayWeatherData.temp.min,
+        tempMax: data.todayWeatherData.temp.max, wind: data.todayWeatherData.wind_speed, dt: data.todayWeatherData.dt,
+        poprecip: data.todayWeatherData.pop, rain: data.todayWeatherData.rain
+    };
+    jsonData.push(weatherData);
+    // });
     return jsonData;
 }
 
@@ -149,55 +155,44 @@ function saveDailyWeatherData(weatherData) {
     // Check if the user has already saved weather data for the current day
     let savedWeatherData = JSON.parse(localStorage.getItem('weatherData')) || {};
 
-    if (!savedWeatherData[currentDay]) {
-        // If not saved for the current day, save it
-        const filteredData = filterTodayWeather(weatherData);
-        savedWeatherData[currentDay] = filteredData;
+    // if (!savedWeatherData[currentDay]) {
+    // If not saved for the current day, save it
+    const filteredData = filterTodayWeather(weatherData);
+    savedWeatherData[currentDay] = filteredData;
+    console.log(filteredData)
 
-        // Save the updated weather data to localStorage
-        localStorage.setItem('weatherData', JSON.stringify(savedWeatherData));
-        console.log('Weather data saved for the day:', currentDay);
+    // Save the updated weather data to localStorage
+    localStorage.setItem('weatherData', JSON.stringify(savedWeatherData));
+    console.log('Weather data saved for the day:', currentDay);
 
-        // Prepare data to be sent to the server
-        const finalData = {
-            city: filteredData.city,
-            weatherData: weatherDataToJSON(filteredData),
-        };
+    // Prepare data to be sent to the server
+    const finalData = {
+        lon: filteredData.lon,
+        lat: filteredData.lat,
+        weatherData: weatherDataToJSON(filteredData),
+    };
 
-        return new Promise(function (resolve, reject) {
-            // Use jQuery's AJAX function
-            $.ajax({
-                url: '/api/saveWeatherData',
-                method: 'POST',
-                data: { data: finalData },
-                success: function (response) {
-                    resolve(response);
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    // Handle the error here
-                    reject(errorThrown);
-                    console.error('Error:', errorThrown);
-                }
-            });
-        });
-    } else {
-        console.log('Weather data already saved for the day:', currentDay);
-        return Promise.resolve('Weather data already saved for the day.');
-    }
+    profileController.saveDailyWeatherData(finalData);
+
+
+    // } else {
+    //     console.log('Weather data already saved for the day:', currentDay);
+    //     return Promise.resolve('Weather data already saved for the day.');
+    // }
 }
 
 function convertUnixTimestamp(timestamp) {
     // Convert Unix timestamp to milliseconds by multiplying by 1000
     const milliseconds = timestamp * 1000;
-    
+
     // Create a new Date object using the milliseconds
     const dateObject = new Date(milliseconds);
-    
+
     // Get day, month, and year from the date object
     const day = dateObject.getDate().toString().padStart(2, '0'); // Add leading zero if needed
     const month = (dateObject.getMonth() + 1).toString().padStart(2, '0'); // Month is zero-based
     const year = dateObject.getFullYear();
-    
+
     // Return the formatted date string (dd/mm/yyyy)
     return `${day}/${month}/${year}`;
 }
@@ -249,7 +244,7 @@ function filterWeatherVariables(hourlyForecast) {
                 humidity: avgHumidity,
                 description: dailyData[date].description,
                 icon: dailyData[date].icon,
-                pop: avgPop
+                pop: avgPop,
 
             });
         }

@@ -114,12 +114,12 @@ async function userController(app) {
             else if (user.city) {
                 let coordinates;
 
-                coordinates = await axios.get(`http://api.openweathermap.org/geo/1.0/direct?q=${user.city}&limit=1&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
+                coordinates = await axios.get(`http://api.openweathermap.org/geo/1.0/direct?q=${user.city}&units=metric&limit=1&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
                 response = await axios.get(`https://api.openweathermap.org/data/3.0/onecall?lat=${coordinates.data[0].lat}&lon=${coordinates.data[0].lon}&units=metric&exclude=current,minutely,hourly&appid=${process.env.OPEN_WEATHER_MAP_API_KEY}`);
             }
-            const data = response.data.list;
-            // filteredWeatherData = filterWeatherVariables2(data);
-            filteredWeatherData = data;
+            const data = response.data;
+            filteredWeatherData = filterWeatherVariables2(data);
+            // filteredWeatherData = data;
 
 
             res.json(response.data);
@@ -138,19 +138,23 @@ async function userController(app) {
 
     app.post('/api/saveWeatherData', async (req, res) => {
         const { data } = req.body;
-        console.log(data)
+
         try {
             // Save the weather data to the database
-            const weatherDataEntries = data.weatherData.map(entry => {
-                return {
-                    humidity: entry.humidity,
-                    temperature: entry.temp,
-                    wind_speed: entry.wind,
-                    city: data.city,
-                };
-            });
 
-            await WeatherData.insertMany(weatherDataEntries);
+            const weatherDataFiltered = {
+                humidity: data.weatherData[0].humidity,
+                temperature: (data.weatherData[0].tempMax + data.weatherData[0].tempMin) / 2,
+                wind_speed: data.weatherData[0].wind,
+                pop: data.weatherData[0].poprecip,
+                rain: data.weatherData[0].rain,
+                lon: data.lon,
+                lat: data.lat
+            };
+
+            // Assuming WeatherData is a Mongoose model
+            const weatherData = new WeatherData(weatherDataFiltered);
+            await weatherData.save();
 
             res.status(200).send('Data received and saved.');
         } catch (error) {
@@ -159,48 +163,26 @@ async function userController(app) {
         }
     });
 
-    function filterWeatherVariables2(hourlyForecast) {
-        const dailyData = {};
-
-        hourlyForecast.forEach(hourlyData => {
-            const date = new Date(hourlyData.dt * 1000).toLocaleDateString('en-US');
-            if (!dailyData[date]) {
-                dailyData[date] = {
-                    temp: [],
-                    wind_speed: [],
-                    humidity: []
-                };
-            }
-            dailyData[date].temp.push(hourlyData.main.temp);
-            dailyData[date].wind_speed.push(hourlyData.wind.speed);
-            dailyData[date].humidity.push(hourlyData.main.humidity);
-        });
-
-        // Calculate average for each day
-        const forecastData = {
+    function filterWeatherVariables2(data) {
+        var forecast = {
             'Air temperature (C)': [],
             'Wind speed (Km/h)': [],
-            'Air humidity (%)': []
+            'Air humidity (%)': [],
+            'pop': [],
+            'rain': []
         };
-
-        for (const date in dailyData) {
-            if (dailyData.hasOwnProperty(date)) {
-                const tempSum = dailyData[date].temp.reduce((acc, curr) => acc + curr, 0);
-                const windSpeedSum = dailyData[date].wind_speed.reduce((acc, curr) => acc + curr, 0);
-                const humiditySum = dailyData[date].humidity.reduce((acc, curr) => acc + curr, 0);
-                const numDataPoints = dailyData[date].temp.length;
-                const avgTemp = tempSum / numDataPoints;
-                const avgWindSpeed = windSpeedSum / numDataPoints;
-                const avgHumidity = humiditySum / numDataPoints;
-
-                forecastData['Air temperature (C)'].push(avgTemp);
-                forecastData['Wind speed (Km/h)'].push(avgWindSpeed);
-                forecastData['Air humidity (%)'].push(avgHumidity);
-            }
-        }
-
-        return forecastData;
+    
+        data.daily.forEach(function(entry) {
+            forecast['Air temperature (C)'].push((entry.temp.max + entry.temp.min) / 2);
+            forecast['Wind speed (Km/h)'].push(entry.wind_speed);
+            forecast['Air humidity (%)'].push(entry.humidity);
+            forecast['pop'].push(entry.pop);
+            forecast['rain'].push(entry.rain);
+        });
+    
+        return forecast;
     }
+    
 
 
 }

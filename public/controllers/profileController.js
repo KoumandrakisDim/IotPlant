@@ -128,4 +128,24 @@ class ProfileController {
       });
     });
   }
+
+  saveDailyWeatherData (data) {
+    return new Promise(function (resolve, reject) {
+      // Use jQuery's AJAX function
+      $.ajax({
+        url: '/api/saveWeatherData',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ data }),
+        success: function (response) {
+          resolve(response);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          // Handle the error here
+          reject(errorThrown);
+          console.error('Error:', errorThrown);
+        }
+      });
+    });
+  }
 }

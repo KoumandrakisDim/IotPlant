@@ -57,25 +57,33 @@ class ProfileView {
     }
 
     createWeatherCard(forecast) {
-        console.log(forecast)
         const card = document.createElement('div');
         card.classList.add('col-4', 'col-lg-2', 'p-2');
 
         // Extract relevant information from the forecast object
         // const date = new Date(forecast.dt * 1000); // Convert timestamp to date
-        const temperature = forecast.temp;
+
         let iconUrl = profileView.getWeatherIconUrl(forecast);
+        let rain = 'NaN';
+
+        if ('rain' in forecast) {
+            rain = Number(forecast.rain.toFixed(2));
+
+        }
+
         // Create HTML structure for the card
         card.innerHTML = `<div class="weather-card p-1">
             <div class="card-header font15px">${convertUnixTimestamp(forecast.dt)}</div>
             <div class="card-body font15px">
-                <span> ${Number(forecast.temp.max.toFixed(2))}°C</span><span style='opacity:0.5'> ${Number(forecast.temp.min.toFixed(2))}°C</span>
+                <span class='font15px'> ${Number(forecast.temp.max.toFixed(2))}°C</span><span style='opacity:0.5'> ${Number(forecast.temp.min.toFixed(2))}°C</span>
                 <div class='d-flex justify-content-center'>
                     <img class='weatherIcon' src=${iconUrl}>
                 </div>
                 <span class='font11px'> Humidity: ${Number(forecast.humidity.toFixed(2))} %</span><br>
                 <span class='font11px'> Wind: ${Number(forecast.wind_speed.toFixed(2))} km/h</span><br>
-                <span class='font11px'> Precipication probability: ${forecast.pop * 100} %</span>
+                <span class='font11px'> Precipication: ${Number(forecast.pop * 100).toFixed(0)} %</span><br>
+                <span class='font11px'> Rain: ${rain}</span>
+
             </div>
             </div>
         `;
@@ -111,6 +119,10 @@ class ProfileView {
                 return scatteredCloudsIcon;
             case 'clear sky':
                 return clearSkyIcon;
+            case 'heavy intensity rain':
+                return 'assets/weatherIcons/day_rain_thunder.png';
+            case 'moderate rain':
+                return 'assets/weatherIcons/day_rain.png';
 
             case 'overcast clouds':
                 return 'assets/weatherIcons/cloudy.png';

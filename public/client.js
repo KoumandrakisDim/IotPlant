@@ -58,10 +58,10 @@ function hideColumnsBasedOnScreenSize(parentId) {
   //   console.log(grid)
   // // Define your breakpoint for hiding columns (adjust as needed)
   // var breakpoint = 768; // For example, hide columns on screens smaller than 768px
-  
+
   // // Get the jqGrid instance
   // var colModel = grid.jqGrid('getGridParam', 'colModel');
-  
+
   // // Check the screen size and hide/show columns accordingly
   // if (screenWidth < breakpoint) {
   //   // Hide columns
@@ -101,7 +101,7 @@ async function login() {
   let userDevices = await deviceController.getDevices(userId);
   deviceController.loadDevicesGrid(userId);
   user = response.user;
-
+  devicesView.devices = userDevices;
   // $('#devicesContainer').html(null);
 
   // userDevices.forEach(function (device) {
@@ -122,6 +122,7 @@ async function login() {
 
   fillUserProfileData(response.user);
   // socket = io('http://localhost:' + response.port);
+  loadPredictedMoistureChart();
 
 
 
@@ -186,7 +187,7 @@ function loadPage(url) {
  * 
  * @param {*} data 
  */
-function loadChart(data) {
+function loadChart(data, device) {
   let labels = [];
   let graphDatamoisture = [];
   // let filteredData = filterSensorData(data);
@@ -231,30 +232,56 @@ function loadChart(data) {
   }];
 
   const ctx = document.getElementById('devicesChart');
+  // let newGraphDiv = document.createElement('div')
+  // document.getElementById('devicesChart').appendChild(newGraphDiv);
+
   // const filteredData = graphData.filter((point, index) => index % n === 0);
   devicesChart = new Chart(ctx, {
     type: 'line',
 
     data: {
       labels: labels, // Initial X-axis labels
-      datasets: datasets
+      datasets: datasets,
+      fill: false,
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
     },
     options: {
-      layout: {
-
+      plugins: {
+        annotation: {
+          annotations: {
+            minLine: {
+              type: 'line',
+              mode: 'horizontal',
+              scaleID: 'y',
+              value: device.min_moisture,
+              borderColor: 'red',
+              borderWidth: 1,
+              label: {
+                content: 'Minimum Value', // Label text
+                enabled: true, // Show label
+                position: 'left', // Label position
+                font: {
+                  size: 12, // Adjust font size as needed
+                },
+                // content: ['This is my text', 'This is my text, second line'],
+              }
+            }
+          }
+        }
       },
       scales: {
         x: {
           display: false,
           ticks: {
-            stepSize: 10 // Adjust the limit as needed
+            stepSize: 20 // Adjust the limit as needed
           }
         },
         y: {
           min: 0,    // Set the minimum value for the Y-axis
           max: 105,  // Set the maximum value for the Y-axis
           ticks: {
-            stepSize: 1  // Set the step size between ticks (optional)
+            stepSize: 10  // Set the step size between ticks (optional)
           },
           title: {
             display: true,
@@ -314,17 +341,51 @@ function loadPredictedMoistureChart(data) {
   const ctx = document.getElementById('predictedMoistureChart');
   // const filteredData = graphData.filter((point, index) => index % n === 0);
 
+  var datasets = [{
+    label: 'Predicted Moisture',
+    borderColor: 'rgba(0, 128, 255, 1)', // Light blue
+    backgroundColor: 'rgba(0, 128, 255, 0.2)', // Light blue with transparency
+    borderWidth: 2,
+    pointRadius: 2, // Adjust point radius
+    pointBorderWidth: 2 // Adjust point border width
+  }, {
+    label: 'Predicted evapotranspiration',
+    borderColor: '#4fac31', // Tomato red
+    backgroundColor: '#4fac31', // Tomato red with transparency
+    borderWidth: 2,
+    pointRadius: 2, // Adjust point radius
+    pointBorderWidth: 2 // Adjust point border width
+  }];
   predictedMoistureChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: dates, // Initial X-axis labels
-      datasets: [{
-        label: 'Predicted Moisture',
-        // data: array, // Initial moisture values
-        borderWidth: 1,
-      }],
+      datasets: datasets,
     },
     options: {
+      plugins: {
+        annotation: {
+          annotations: {
+            minLine: {
+              type: 'line',
+              mode: 'horizontal',
+              scaleID: 'y',
+              value: devicesView.devices[0].min_moisture,
+              borderColor: 'red',
+              borderWidth: 1,
+              label: {
+                content: 'Minimum Value', // Label text
+                enabled: true, // Show label
+                position: 'left', // Label position
+                font: {
+                  size: 12, // Adjust font size as needed
+                },
+                // content: ['This is my text', 'This is my text, second line'],
+              }
+            }
+          }
+        }
+      },
       scales: {
         x: {
           display: true,
@@ -375,7 +436,9 @@ function updatePredictionChart(data) {
   // Extract the predictedMoisture array
   // const predictedMoistureArray = JSON.parse(dataObject);
 
-  predictedMoistureChart.data.datasets[0].data = dataObject;
+  predictedMoistureChart.data.datasets[0].data = dataObject.predictedMoisture;
+  predictedMoistureChart.data.datasets[1].data = dataObject.predictedEvapotranspiration;
+
   predictedMoistureChart.update();
   $('#predictionChartLoadingIcon').hide();
   document.getElementById('predictedMoistureChart').style.opacity = 1;
@@ -518,11 +581,14 @@ async function changeTimeWindow(device_id, timeWindow) {
       timeWindow = getSelectedValueRadio();
     }
     let response = await sensorController.getDeviceData(device.device_id, timeWindow);
+
+    // let devicesData = await sensorController.getAllDevicesData(timeWindow);
+
     originalData = response;
     console.log(originalData)
 
     if (!chartLoaded) {
-      loadChart(response);
+      loadChart(response, devicesView.devices[0]);
       chartLoaded = true;
     }
     if (timeWindow === 'realTime') {
@@ -541,7 +607,16 @@ async function changeTimeWindow(device_id, timeWindow) {
 
 }
 
+function createCharts(devicesData) {
+  if (!chartLoaded) {
+    devicesData.forEach(function (device) {
 
+      loadChart(device.data, device);
+      chartLoaded = true;
+    })
+
+  }
+}
 
 async function getPredictedMoisture() {
   $('#predictionChartLoadingIcon').show();
@@ -573,4 +648,3 @@ async function getPredictedMoisture() {
   // }
 
 }
-loadPredictedMoistureChart();
