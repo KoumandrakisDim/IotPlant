@@ -345,75 +345,41 @@ async function deviceController(app) {
     //         return res.status(500).json({ error: 'Internal Server Error' });
     //     }
     // });
-
-    // Route to retrieve latest sensor data
-    app.post('/api/getSensorData/:id', async (req, res) => {
+    app.post('/api/devices/getAllSensorData', async (req, res) => {
 
         const deviceId = req.params.id;
         const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
 
         try {
-
-            let query = { device_id: deviceId };
-
-            // Adjust the query based on the timeWindow parameter
-            if (timeWindow === 'year') {
-                query.timestamp = { $gte: new Date(new Date().getFullYear(), 0, 1) };
-            } else if (timeWindow === 'month') {
-                query.timestamp = { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
-            } else if (timeWindow === 'week') {
-                query.timestamp = { $gte: new Date(new Date() - 7 * 24 * 60 * 60 * 1000) };
-            } else if (timeWindow === 'day') {
-                query.timestamp = { $gte: new Date(new Date() - 24 * 60 * 60 * 1000) };
-            } else if (timeWindow === 'hour') {
-                query.timestamp = { $gte: new Date(new Date() - 60 * 60 * 1000) };
-            } else if (timeWindow === 'max') {
-                // No additional filtering needed for 'max' window
-            } else if (timeWindow === 'realTime') {
-                // Fetch the last 50 data points (assuming timestamp is sorted in descending order)
-                const latestData = await SensorData.find({ device_id: deviceId })
-                    .sort({ timestamp: -1 }) // Descending order for most recent first
-                    .limit(50);
-
-                // Reverse the order in your application code
-                const reversedData = latestData.reverse();
-                if (latestData[0]) {
-                    lastMoistureValue = reversedData[reversedData.length - 1].moisture;
-
-                }
-
-                return res.json(reversedData);
-            }
+            let pipeline = [
+                { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
+            ];
+            pipeline.push({ 
+                $group: { 
+                    _id: "$device_id", // Group by device_id
+                    data: { $push: "$$ROOT" } // Collect all documents in the group
+                } 
+            });
+            // Add sampling stage for each time window
+            const sampleSize = 10; // Desired number of samples
 
 
-            // Filter out documents with missing or invalid timestamps
-            // query.timestamp = { $gte: new Date(), $type: 'date' };
-            // Fetch data based on the adjusted query
-            let fetchedData = await SensorData.find(query);
-            console.log(query)
-            console.log(fetchedData)
-            // Downsample the fetched data to a smaller set
-            let downsampledData = [];
-            const totalRecords = fetchedData.length;
-            const sampleSize = 50; // Desired number of samples
+            pipeline.push({ $sample: { size: sampleSize } }); // Add sampling stage to select 50 samples
+            console.log(pipeline)
+            // Perform aggregation
+            let aggregatedData = await SensorData.aggregate(pipeline);
 
-            if (totalRecords <= sampleSize) {
-                downsampledData = fetchedData; // If the total records are less than or equal to the sample size, no need for downsampling
-            } else {
-                const step = Math.ceil(totalRecords / sampleSize); // Calculate the step size for downsampling
-                for (let i = 0; i < totalRecords; i += step) {
-                    downsampledData.push(fetchedData[i]); // Select every 'step' record from the fetched data
-                }
-            }
+            console.log(aggregatedData)
 
-            if (downsampledData.length > 0) {
-                if ('moisture' in downsampledData[downsampledData.length - 1]) {
-                    lastMoistureValue = downsampledData[downsampledData.length - 1].moisture;
+
+            if (aggregatedData.length > 0) {
+                if ('moisture' in aggregatedData[aggregatedData.length - 1]) {
+                    lastMoistureValue = aggregatedData[aggregatedData.length - 1].moisture;
 
                 }
             }
 
-            return res.json(downsampledData);
+            return res.json(aggregatedData);
 
 
 
@@ -422,6 +388,55 @@ async function deviceController(app) {
             res.status(500).send('Internal Server Error');
         }
     });
+    // Route to retrieve latest sensor data
+    app.post('/api/getSensorData/:id', async (req, res) => {
+        const deviceId = req.params.id;
+        const { timeWindow, isFirstCall } = req.body;
+
+        try {
+            let pipeline = [
+                { $match: { device_id: deviceId } },
+                { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
+            ];
+
+            // Add sampling stage for each time window
+            const sampleSize = 50; // Desired number of samples
+
+            if (timeWindow === 'year') {
+                pipeline.push({ $match: { timestamp: { $gte: new Date(new Date().getFullYear(), 0, 1) } } });
+            } else if (timeWindow === 'month') {
+                pipeline.push({ $match: { timestamp: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } } });
+            } else if (timeWindow === 'week') {
+                const oneWeekAgo = new Date(new Date() - 7 * 24 * 60 * 60 * 1000);
+                pipeline.push({ $match: { timestamp: { $gte: oneWeekAgo } } });
+            } else if (timeWindow === 'day') {
+                const oneDayAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
+                pipeline.push({ $match: { timestamp: { $gte: oneDayAgo } } });
+            } else if (timeWindow === 'hour') {
+                const oneHourAgo = new Date(new Date() - 60 * 60 * 1000);
+                pipeline.push({ $match: { timestamp: { $gte: oneHourAgo } } });
+            }
+
+            pipeline.push({ $sample: { size: sampleSize } }); // Add sampling stage to select 50 samples
+            console.log(pipeline)
+            // Perform aggregation
+            let aggregatedData = await SensorData.aggregate(pipeline);
+
+            if (aggregatedData.length > 0) {
+                if ('moisture' in aggregatedData[aggregatedData.length - 1]) {
+                    lastMoistureValue = aggregatedData[aggregatedData.length - 1].moisture;
+
+                }
+            }
+
+            return res.json(aggregatedData);
+
+        } catch (error) {
+            console.error('Error retrieving sensor data:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    });
+
 
     // get sensor data from nodeMcu and save to database
     app.post('/sensorData', validateApiKey, async (req, res) => {
@@ -443,9 +458,11 @@ async function deviceController(app) {
                 }
                 if (!('moisture' in receivedJson) || receivedJson.moisture > 100 || receivedJson.moisture < 0) {
                     responseData += 'moisture sensor not working';
+                    return res.status(400).json({ error: responseData });
                 } else {
                     sensorsWorking++;
                 }
+
 
                 const fieldsToSave = { device_id };
 

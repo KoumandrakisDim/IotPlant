@@ -1,0 +1,51 @@
+{
+    "2024-03-15": {
+        "soil_moisture": 49.66304347826087,
+        "temperature": NaN,
+        "humidity": NaN,
+        "wind_speed": NaN,
+        "evapotranspiration": 44.30838509316771
+    },
+    "2024-03-12": {
+        "soil_moisture": 83.6732536764706,
+        "temperature": NaN,
+        "humidity": NaN,
+        "wind_speed": NaN,
+        "evapotranspiration": null
+    },
+    "2024-03-11": {
+        "soil_moisture": 83.66839916839916,
+        "temperature": NaN,
+        "humidity": NaN,
+        "wind_speed": NaN,
+        "evapotranspiration": 4.867946607632277
+    },
+    "2024-03-10": {
+        "soil_moisture": 88.53634577603144,
+        "temperature": NaN,
+        "humidity": NaN,
+        "wind_speed": NaN,
+        "evapotranspiration": null
+    },
+    "2024-03-13": {
+        "soil_moisture": 76.36585365853658,
+        "temperature": NaN,
+        "humidity": NaN,
+        "wind_speed": NaN,
+        "evapotranspiration": 7.307400017934015
+    },
+    "2024-03-14": {
+        "soil_moisture": 93.97142857142858,
+        "temperature": 13.425555555555555,
+        "humidity": 54.888888888888886,
+        "wind_speed": 4.724444444444444,
+        "evapotranspiration": null
+    },
+    "2024-03-20": {
+        "soil_moisture": 81.29299363057325,
+        "temperature": NaN,
+        "humidity": NaN,
+        "wind_speed": NaN,
+        "evapotranspiration": null
+    }
+}

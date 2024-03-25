@@ -22,10 +22,14 @@ def predict_soil_moisture(forecast_data, current_soil_moisture, model_path):
 
         # Predict evapotranspiration
         evapotranspiration_pred = model.predict([input_features])[0]
+
+        # Adjust evap. to soil moisture level
+        evapotranspiration_pred *= current_soil_moisture / 100
         
         # Adjust predicted moisture based on pop and rain
         predicted_moisture = current_soil_moisture - evapotranspiration_pred
 
+        # if it rains a lot, set moisture to 100
         if(pop == 1 and rain > 10):
             predicted_moisture = 100
     
