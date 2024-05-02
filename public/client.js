@@ -132,6 +132,9 @@ async function fillUserProfileData(data) {
   $('#city').val(data.city);
   document.getElementById('usernameView').value = data.username;
   document.getElementById('useWeatherButton').checked = data.useWeather;
+  document.getElementById('toggleSmsNotifications').checked = data.smsNotifications;
+  document.getElementById('phoneNumberInput').value = data.phoneNumber;
+
   profileView.toggleUseWeatherButton();
   // document.getElementById('realTimeTimeWindow').checked = true;
   if (data.useWeather) {
@@ -580,8 +583,8 @@ async function changeTimeWindow(device_id, timeWindow) {
     if (!timeWindow) {
       timeWindow = getSelectedValueRadio();
     }
-    let response = await sensorController.getDeviceData(device.device_id, timeWindow);
-
+    let response = await sensorController.getAllDevicesData(device.device_id, timeWindow);
+    
     // let devicesData = await sensorController.getAllDevicesData(timeWindow);
 
     originalData = response;

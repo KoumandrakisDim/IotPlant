@@ -9,6 +9,8 @@ const express = require('express');
 const session = require('express-session');
 var saveRealTimeData;
 
+var userData = {};
+
 async function userController(app) {
 
     validationModule(app);
@@ -44,6 +46,7 @@ async function userController(app) {
         try {
             const user = await User.findOne({ username });
             console.log(user)
+            userData = user;
             if (user && await user.comparePassword(password)) {
                 req.session.user = user; // Store user information in the session
                 saveRealTimeData = user.toggleSaveSensorData;
@@ -163,6 +166,8 @@ async function userController(app) {
         }
     });
 
+
+
     function filterWeatherVariables2(data) {
         var forecast = {
             'Air temperature (C)': [],
@@ -171,18 +176,18 @@ async function userController(app) {
             'pop': [],
             'rain': []
         };
-    
-        data.daily.forEach(function(entry) {
+
+        data.daily.forEach(function (entry) {
             forecast['Air temperature (C)'].push((entry.temp.max + entry.temp.min) / 2);
             forecast['Wind speed (Km/h)'].push(entry.wind_speed);
             forecast['Air humidity (%)'].push(entry.humidity);
             forecast['pop'].push(entry.pop);
             forecast['rain'].push(entry.rain);
         });
-    
+
         return forecast;
     }
-    
+
 
 
 }
@@ -192,4 +197,7 @@ function getFilteredWeatherData() {
 function getSaveRealTimeData() {
     return saveRealTimeData;
 }
-module.exports = { userController, getFilteredWeatherData, getSaveRealTimeData };
+function getUserData(){
+    return userData;
+}
+module.exports = { userController, getFilteredWeatherData, getSaveRealTimeData, getUserData };

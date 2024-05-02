@@ -12,7 +12,9 @@ const userSchema = new mongoose.Schema({
   city: String,
   useWeather: Boolean,
   toggleSaveSensorData: Boolean,
-  api_key: String
+  api_key: String,
+  smsNotifications: Boolean,
+  phoneNumber: String
 });
 
 // Add a static method to authenticate users

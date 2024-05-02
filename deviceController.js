@@ -5,11 +5,19 @@ const axios = require('axios');
 let lastMoistureValue = 0;
 const bodyParser = require('body-parser');
 let deviceId;
-const { getFilteredWeatherData, getSaveRealTimeData } = require('./controllers/userController');
+const { getFilteredWeatherData, getSaveRealTimeData, getUserData } = require('./controllers/userController');
 const User = require('./models/user');
 
 const deviceIPs = {};
 let saveRealTimeData;
+
+var devicesArray = [];
+
+const twilio = require('twilio');
+const accountSid = process.env.SMS_accountSid;
+const authToken = process.env.SMS_TOKEN;
+const twilioPhoneNumber = '+12569801284';
+const client = twilio(accountSid, authToken);
 
 async function deviceController(app) {
 
@@ -118,8 +126,10 @@ async function deviceController(app) {
         try {
             // Retrieve devices for the specified user
             const devices = await Plant.find({ user_id: userId });
+            devicesArray = devices;
             // Send the devices as JSON
             deviceId = devices[devices.length - 1].device_id;
+
             res.json(devices);
         } catch (error) {
             console.error('Error retrieving devices:', error);
@@ -354,11 +364,11 @@ async function deviceController(app) {
             let pipeline = [
                 { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
             ];
-            pipeline.push({ 
-                $group: { 
+            pipeline.push({
+                $group: {
                     _id: "$device_id", // Group by device_id
                     data: { $push: "$$ROOT" } // Collect all documents in the group
-                } 
+                }
             });
             // Add sampling stage for each time window
             const sampleSize = 10; // Desired number of samples
@@ -438,7 +448,7 @@ async function deviceController(app) {
     });
 
 
-    // get sensor data from nodeMcu and save to database
+    // devices sends data to this endpoint. get sensor data from nodeMcu and save to database
     app.post('/sensorData', validateApiKey, async (req, res) => {
         const { sensorData } = req.body;
 
@@ -446,39 +456,51 @@ async function deviceController(app) {
         var receivedJson = req.body;
         const device_id = req.body.device_id;
         console.log(saveRealTimeData)
-        if (getSaveRealTimeData()) {
 
-            try {
-                let status = 'Connected';
-                let sensorsWorking = 0;
-                if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
-                    responseData = 'Temperature and humidity sensor not working';
-                } else {
-                    sensorsWorking++;
+        try {
+            let status = 'Connected';
+            let sensorsWorking = 0;
+            if (!('temperature' in receivedJson && 'humidity' in receivedJson)) {
+                responseData = 'Temperature and humidity sensor not working';
+            } else {
+                sensorsWorking++;
+            }
+            if (!('moisture' in receivedJson) || receivedJson.moisture > 100 || receivedJson.moisture < 0) {
+                responseData += 'moisture sensor not working';
+                return res.status(400).json({ error: responseData });
+            } else {
+                sensorsWorking++;
+            }
+
+            // send notification if moisture is too low
+            const savedDeviceData = devicesArray.find(item => item.device_id === device_id);
+
+            if (getUserData().smsNotifications) {
+                if (receivedJson.moisture < savedDeviceData.min_moisture) {
+                    sendSMSNotification(getUserData().phoneNumber, 'Warning! Low soil moisture detected! id:' + device_id);
                 }
-                if (!('moisture' in receivedJson) || receivedJson.moisture > 100 || receivedJson.moisture < 0) {
-                    responseData += 'moisture sensor not working';
-                    return res.status(400).json({ error: responseData });
-                } else {
-                    sensorsWorking++;
+            }
+            // if (receivedJson.moisture < savedDeviceData.min_moisture) {
+            //     sendWebNotification('Warning! Low soil moisture detected! id:' + device_id);
+            // }
+
+            const fieldsToSave = { device_id };
+
+            // Loop through the request body and add all the fields to the fieldsToSave object
+            for (const key in req.body) {
+                // Exclude device_id as it's handled separately
+                if (key !== 'device_id') {
+                    fieldsToSave[key] = req.body[key];
                 }
+            }
 
+            // Save the data to the database
+            const sensorData = new SensorData(fieldsToSave);
+            // await sensorData.save();
 
-                const fieldsToSave = { device_id };
+            // Save the sensor data to the database
+            if (getSaveRealTimeData()) {
 
-                // Loop through the request body and add all the fields to the fieldsToSave object
-                for (const key in req.body) {
-                    // Exclude device_id as it's handled separately
-                    if (key !== 'device_id') {
-                        fieldsToSave[key] = req.body[key];
-                    }
-                }
-
-                // Save the data to the database
-                const sensorData = new SensorData(fieldsToSave);
-                // await sensorData.save();
-
-                // Save the sensor data to the database
                 sensorData.save()
                     .then(() => {
                         console.log('Sensor data saved to the database');
@@ -488,18 +510,18 @@ async function deviceController(app) {
                     .catch((error) => {
                         console.error('Error saving sensor data to the database:', error);
                     });
-
-                // Process the request and generate the response data
-
-                // Send the response data back to the client
-            } catch (error) {
-                // Handle any errors that occurred during processing
-                console.error('Error processing request:', error);
-                res.status(500).json({ error: 'Internal Server Error' });
+            } else {
+                res.status(200).json({ error: 'Data not saved' });
             }
-        } else {
-            res.status(200).json({ error: 'Data not saved' });
+            // Process the request and generate the response data
+
+            // Send the response data back to the client
+        } catch (error) {
+            // Handle any errors that occurred during processing
+            console.error('Error processing request:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
         }
+
     });
 
     //save data
@@ -540,7 +562,31 @@ async function deviceController(app) {
         res.sendStatus(200);
     });
 
-
+    // function to send SMS notification
+    /**
+     * 
+     * @param {*} toNumber 
+     * @param {*} message 
+     */
+    function sendSMSNotification(toNumber, message) {
+        try {
+            client.messages.create({
+                body: message,
+                from: twilioPhoneNumber,
+                to: toNumber
+            })
+            console.log('Notification sent. SID:', message.sid);
+        } catch {
+            console.error('Error sending notification:', error);
+        }
+    };
+    function sendWebNotification(message){
+        app.post('/api/send-notification', (req, res) => {
+            req.body.message = message;
+            
+            res.sendStatus(200);
+        });
+    }
     function getDeviceIP(deviceId) {
         return deviceIPs[deviceId];
     }

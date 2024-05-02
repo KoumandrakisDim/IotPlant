@@ -92,9 +92,9 @@
               onclick="showContainer('profileContainer')">Profile</a>
             <a class="nav-link" style="cursor: pointer;margin-left:10%;"
               onclick="showContainer('devicesFileContainer'), resizeGrid('devicesGrid', 'devicesContainer');hideColumnsBasedOnScreenSize('devicesContainer');">Devices</a>
+            <a class="nav-link" style="cursor: pointer;margin-left:10%;" onclick="profileController.logout()">Logout</a>
             <a class="nav-link" style="cursor: pointer;margin-left:10%;"
-              onclick="profileController.logout()">Logout</a>
-
+              onclick="showContainer('notificationsContainer')"><i class="bi bi-bell"></i></a>
           </li>
         </ul>
       </div>
@@ -183,6 +183,19 @@
           <input type="text" id="userLocationLabel" class="form-control" disabled>
         </div>
       </div>
+      <div class="row">
+        <div class="col-6">
+          <span class="d-block white">SMS notifications</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleSmsNotifications">
+            <span class="slider round"></span>
+          </label>
+        </div>
+        <div class="col-6">
+          <label for="phoneNumberInput" class="white">Phone number</label>
+          <input type="text" id="phoneNumberInput" class="form-control">
+        </div>
+      </div>
       <button class="btn btn-primary mt-2" id="saveProfileButton">Save</button>
 
     </div>
@@ -201,6 +214,11 @@
         <span class="slider round"></span>
       </label>
 
+    </div>
+    <div class="fileContainer" id="notificationsContainer">
+      <div class="row">
+        
+      </div>
     </div>
   </div>
 
