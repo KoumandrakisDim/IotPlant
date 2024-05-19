@@ -1,4 +1,5 @@
 let devicesChart;
+let predictedMoistureCharts = [];
 /**
  * 
  * @param {*} data 
@@ -118,8 +119,8 @@ function loadChart(data, device) {
             },
         },
     });
-
     document.getElementById('devicesChart_' + device).chart = devicesChart;
+
 }
 
 function loadPredictedMoistureChart(data, deviceId) {
@@ -157,7 +158,7 @@ function loadPredictedMoistureChart(data, deviceId) {
         pointRadius: 2, // Adjust point radius
         pointBorderWidth: 2 // Adjust point border width
     }];
-    predictedMoistureChart = new Chart(newGraphDiv, {
+    let predictedMoistureChart = new Chart(newGraphDiv, {
         type: 'line',
         data: {
             labels: dates, // Initial X-axis labels
@@ -217,10 +218,12 @@ function loadPredictedMoistureChart(data, deviceId) {
             },
         },
     });
+
     $('#predictionChartLoadingIcon_' + deviceId).hide();
     document.getElementById('predictedMoistureChart_' + deviceId).style.opacity = 1;
-
-
+    predictedMoistureChart.chartId = 'predictedMoistureChart_' + deviceId;
+    predictedMoistureCharts.push(predictedMoistureChart);
+    applyLoadingToChart(predictedMoistureChart.chartId);
 }
 
 function updateChart(data, timeWindow, chartElement) {
@@ -235,13 +238,10 @@ function updateChart(data, timeWindow, chartElement) {
     const temperatureArray = data.map(obj => obj.temperature);
     const humidityArray = data.map(obj => obj.humidity);
 
-    console.log(valuesArray)
-    console.log(labelsArray)
-    console.log(temperatureArray)
+    console.log(data)
 
     labelsArray = labelsArray.map(formatDateString);
     let chart = chartElement.chart;
-    console.log(chart)
 
     chart.data.datasets[0].data = valuesArray;
     chart.data.datasets[1].data = temperatureArray;
@@ -253,11 +253,14 @@ function updateChart(data, timeWindow, chartElement) {
     chart.update();
 }
 
-function updatePredictionChart(data) {
+function updatePredictionChart(data, chartId, loadingIconId) {
     console.log(data)
+    if(!data){
+        return;
+    }
     // data = filterArray(data.predictedMoisture);
     // Remove newline characters
-    const cleanedDataString = data.predictedMoisture.replace(/\r?\n|\r/g, '');
+    const cleanedDataString = data.replace(/\r?\n|\r/g, '');
 
     // Parse the string into an object
     const dataObject = JSON.parse(cleanedDataString);
@@ -267,27 +270,39 @@ function updatePredictionChart(data) {
 
     // Extract the predictedMoisture array
     // const predictedMoistureArray = JSON.parse(dataObject);
+    predictedMoistureChart = document.getElementById(chartId).children[1];
+    console.log(chartId)
 
-    predictedMoistureChart.data.datasets[0].data = dataObject.predictedMoisture;
-    predictedMoistureChart.data.datasets[1].data = dataObject.predictedEvapotranspiration;
+    let chart = predictedMoistureCharts.find(chart => chart.chartId === chartId);
 
-    predictedMoistureChart.update();
-    $('#predictionChartLoadingIcon').hide();
-    document.getElementById('predictedMoistureChart').style.opacity = 1;
+    console.log(predictedMoistureCharts)
+    console.log(chart)
 
+    chart.data.datasets[0].data = dataObject.predictedMoisture;
+    chart.data.datasets[1].data = dataObject.predictedEvapotranspiration;
+
+    chart.update();
+    // $(loadingIconId).hide();
+    // document.getElementById(chartId).style.opacity = 1;
+    removeLoadingFromChart(chartId);
 }
 
-function loadDevicesCharts(userDevices) {
-    console.log(userDevices)
+function loadDevicesCharts(sensorData) {
+    console.log(sensorData);
 
-    userDevices.forEach(function (device) {
-        console.log(device)
+    sensorData.forEach(function(deviceData) {
+        console.log(deviceData);
 
-        document.getElementById('dashboard').appendChild(createChartContainer(device._id));
+        // Assuming deviceData is an array of sensor data entries for a device
+        const deviceId = deviceData.length > 0 ? deviceData[0].device_id : null;
 
-        loadChart(device.data, device._id);
-        loadPredictedMoistureChart(null, device._id);
-    })
+        if (deviceId) {
+            document.getElementById('chartsContainer').appendChild(createChartContainer(deviceId));
+
+            loadChart(deviceData, deviceId);
+            loadPredictedMoistureChart(null, deviceId);
+        }
+    });
 
     const timeWindowLabels = document.querySelectorAll('.timeWindowButton');
     timeWindowLabels.forEach(label => {
@@ -296,6 +311,7 @@ function loadDevicesCharts(userDevices) {
         });
     });
 }
+
 
 function createChartContainer(deviceId) {
     const container = document.createElement('div');
@@ -334,17 +350,18 @@ function createChartContainer(deviceId) {
     const rightColumn = document.createElement('div');
     rightColumn.className = 'col-12 col-md-6 mt-2';
     rightColumn.id = 'predictionDiv_' + deviceId;
+    rightColumn.style.position = 'relative';
 
     const predictedMoistureChartCanvasParent = document.createElement('div');
 
     const predictedMoistureChartCanvas = document.createElement('canvas');
-    predictedMoistureChartCanvasParent.className = 'chart';
+    predictedMoistureChartCanvasParent.className = 'chart predictionChart';
     predictedMoistureChartCanvasParent.id = 'predictedMoistureChart_' + deviceId;
     predictedMoistureChartCanvasParent.style.position = 'relative';
 
     const predictMoistureButton = document.createElement('button');
-    predictMoistureButton.className = 'btn btn-secondary roundButton';
-    predictMoistureButton.id = 'predictMoistureButton';
+    predictMoistureButton.className = 'btn btn-secondary roundButton predictMoistureButton';
+    predictMoistureButton.id = 'predictMoistureButton_' + deviceId;
     predictMoistureButton.innerHTML = '<i class="bi bi-bootstrap-reboot d-block"></i>';
 
     const spinnerContainer = document.createElement('div');
@@ -363,7 +380,7 @@ function createChartContainer(deviceId) {
     container.appendChild(leftColumn);
     container.appendChild(rightColumn);
 
-    predictMoistureButton.addEventListener('click', getPredictedMoisture);
+    predictMoistureButton.addEventListener('click', () => getPredictedMoisture(deviceId));
 
 
 
@@ -429,3 +446,16 @@ function selectTimeWindowClick(timeWindowButton, timeWindow) {
     timeWindowButton.classList.add('selectedTimeWindow');
     changeTimeWindow(deviceId, timeWindow);
 }
+
+function applyLoadingToChart(chartId){
+    let chart = document.getElementById(chartId);
+    chart.style.opacity = 0.5;
+    console.log(chart)
+    
+    chart.parentNode.querySelector('.spinner-container').firstChild.style.display = 'block';
+  }
+  function removeLoadingFromChart(chartId){
+    let chart = document.getElementById(chartId);
+    chart.style.opacity = 1;    
+    chart.parentNode.querySelector('.spinner-container').firstChild.style.display = 'none';
+  }

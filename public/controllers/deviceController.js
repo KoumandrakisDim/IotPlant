@@ -138,7 +138,7 @@ class DeviceController {
     });
   }
 
-  predictMoisture(data) {
+  predictMoisture(data, moistureArray) {
     const apiKey = localStorage.getItem('apiKey');
 
     // Check if API key exists
@@ -151,14 +151,18 @@ class DeviceController {
     const headers = {
       'Authorization': `API_KEY ${apiKey}`
     };
+    console.log(data);
+
     return new Promise(function (resolve, reject) {
       // Use jQuery's AJAX function
       $.ajax({
         url: `/api/predictMoisture`,
         method: 'POST',
         headers: headers,
-        data: { data: data },
+        data: JSON.stringify({ data: data, moistureArray: moistureArray }),
+        contentType: 'application/json',
         success: function (response) {
+          console.log(response)
           resolve(response);
         },
         error: function (jqXHR, textStatus, errorThrown) {

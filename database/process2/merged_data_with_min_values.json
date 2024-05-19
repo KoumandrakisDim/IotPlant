@@ -1,0 +1,51 @@
+{
+    "2024-03-10": {
+        "soil_moisture": 39,
+        "temperature": -3.04,
+        "humidity": 72,
+        "wind_speed": 2.21,
+        "evapotranspiration": null
+    },
+    "2024-03-15": {
+        "soil_moisture": 30,
+        "temperature": 9.69,
+        "humidity": 51,
+        "wind_speed": 2.5,
+        "evapotranspiration": 55
+    },
+    "2024-03-11": {
+        "soil_moisture": 61,
+        "temperature": 12.99,
+        "humidity": 67,
+        "wind_speed": 3.61,
+        "evapotranspiration": null
+    },
+    "2024-03-13": {
+        "soil_moisture": 42,
+        "temperature": 11.17,
+        "humidity": 53,
+        "wind_speed": 2.31,
+        "evapotranspiration": null
+    },
+    "2024-03-20": {
+        "soil_moisture": 31,
+        "temperature": 10.7,
+        "humidity": 63,
+        "wind_speed": 2.4,
+        "evapotranspiration": null
+    },
+    "2024-03-12": {
+        "soil_moisture": 30,
+        "temperature": 11.13,
+        "humidity": 52,
+        "wind_speed": 1.49,
+        "evapotranspiration": 31
+    },
+    "2024-03-14": {
+        "soil_moisture": 85,
+        "temperature": 10.49,
+        "humidity": 50,
+        "wind_speed": 2.96,
+        "evapotranspiration": null
+    }
+}

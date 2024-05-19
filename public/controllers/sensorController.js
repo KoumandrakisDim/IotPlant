@@ -17,7 +17,7 @@ class SensorController {
                 contentType: 'application/json',
                 data: JSON.stringify({ timeWindow: timeWindow, isFirstCall: isFirstCall }),
                 success: function (response) {
-
+                    console.log(response)
                     resolve(response);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
@@ -30,17 +30,14 @@ class SensorController {
         });
     }
 
-    getAllDevicesData(timeWindow) {
-        if (!timeWindow) {
-            timeWindow = 'realTime';
-        }
+    getAllDevicesData(id) {
+        console.log(id)
         return new Promise(function (resolve, reject) {
             // Use jQuery's AJAX function
             $.ajax({
-                url: `/api/devices/getAllSensorData`, // Adjust the URL to match your server route
+                url: `/api/devices/getAllSensorData/${userId}`, // Adjust the URL to match your server route
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ timeWindow: timeWindow }),
                 success: function (response) {
 
                     resolve(response);

@@ -13,11 +13,11 @@ let saveRealTimeData;
 
 var devicesArray = [];
 
-const twilio = require('twilio');
-const accountSid = process.env.SMS_accountSid;
-const authToken = process.env.SMS_TOKEN;
-const twilioPhoneNumber = '+12569801284';
-const client = twilio(accountSid, authToken);
+// const twilio = require('twilio');
+// const accountSid = process.env.SMS_accountSid;
+// const authToken = process.env.SMS_TOKEN;
+// const twilioPhoneNumber = '+12569801284';
+// const client = twilio(accountSid, authToken);
 
 async function deviceController(app) {
 
@@ -301,151 +301,104 @@ async function deviceController(app) {
         }
     }
 
-    // Example usage:
-    // setDeviceSampleRate(data.device_id, sample_rate, apiKey);
-
-    // app.post('/api/setDeviceSampleRate', validateApiKey, async (req, res) => {
-    //     const data = req.body;
-    //     const authHeader = req.headers.authorization;
-    //     const sample_rate = req.body.sample_rate;
-
-    //     const apiKey = authHeader.split(" ")[1];
-    //     console.log(apiKey)
-
-    //     try {
-    //         // Check if required data is present in the request
-    //         if (!data.device_id || !sample_rate) {
-    //             return res.status(400).json({ error: 'Missing device_id or sample_rate' });
-    //         }
-    //         if (sample_rate < 1000) {
-    //             return res.status(400).json({ error: 'Given sample_rate is too low. 1000 minimum' });
-    //         }
-    //         let deviceIp = getDeviceIP(data.device_id);
-    //         deviceIPs[deviceId]
-
-    //         if (!deviceIp) {
-    //             return res.status(404).json({ error: 'Device not found' });
-    //         }
-    //         // Make an API call to the NodeMCU device
-    //         try {
-    //             const response = await axios.post(`http://${deviceIp}/reprogramDevice`, {
-    //                 sampleRate: sample_rate
-    //             }, {
-    //                 headers: {
-    //                     'Authorization': 'API_KEY ' + apiKey // Include the API key in the request headers
-    //                 }
-    //             });
-
-    //             // Check the response status code and handle accordingly
-    //             if (response.status === 200) {
-    //                 // API call successful, handle success response
-    //                 return res.status(200).json({ message: 'Sample rate updated successfully' });
-    //             } else {
-    //                 // API call failed, handle error response
-    //                 return res.status(500).json({ error: 'Failed to update sample rate on the device' });
-    //             }
-    //             // Process response here
-    //         } catch (error) {
-    //             console.error('Error making Axios request:', error);
-    //             // Handle the error appropriately
-    //         }
-
-    //     } catch (error) {
-    //         console.error('Error:', error);
-    //         return res.status(500).json({ error: 'Internal Server Error' });
-    //     }
-    // });
-    app.post('/api/devices/getAllSensorData', async (req, res) => {
-
-        const deviceId = req.params.id;
-        const { timeWindow, isFirstCall } = req.body; // Assuming the timeWindow parameter is passed in the request body
-
+    app.post('/api/devices/getAllSensorData/:userId', async (req, res) => {
         try {
-            let pipeline = [
-                { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
-            ];
-            pipeline.push({
-                $group: {
-                    _id: "$device_id", // Group by device_id
-                    data: { $push: "$$ROOT" } // Collect all documents in the group
-                }
-            });
-            // Add sampling stage for each time window
-            const sampleSize = 10; // Desired number of samples
+            // Assuming userId is obtained from req.body.userId
+            const userId = req.params.userId;
+            const devices = await Plant.find({ user_id: userId }).select('device_id');
 
+            // Extract device IDs from the fetched devices
+            const deviceIds = devices.map(device => device.device_id);
+            console.log(deviceIds)
+            // Step 2: Fetch the latest 50 sensor data entries for each device
+            const sensorData = await Promise.all(deviceIds.map(async deviceId => {
+                return await SensorData.find({ device_id: deviceId })
+                    .sort({ timestamp: -1 })
+                    .limit(50);
+            }));
+            var lastMoistureValues = [];
+            sensorData.forEach(function (data) {
+                lastMoistureValues.push(data[data.length - 1].moisture);
+            })
 
-            pipeline.push({ $sample: { size: sampleSize } }); // Add sampling stage to select 50 samples
-            console.log(pipeline)
-            // Perform aggregation
-            let aggregatedData = await SensorData.aggregate(pipeline);
-
-            console.log(aggregatedData)
-
-
-            if (aggregatedData.length > 0) {
-                if ('moisture' in aggregatedData[aggregatedData.length - 1]) {
-                    lastMoistureValue = aggregatedData[aggregatedData.length - 1].moisture;
-
-                }
-            }
-
-            return res.json(aggregatedData);
-
-
+            return res.json(sensorData);
 
         } catch (error) {
             console.error('Error retrieving sensor data:', error);
             res.status(500).send('Internal Server Error');
         }
     });
+
     // Route to retrieve latest sensor data
-    app.post('/api/getSensorData/:id', async (req, res) => {
-        const deviceId = req.params.id;
-        const { timeWindow, isFirstCall } = req.body;
+app.post('/api/getSensorData/:id', async (req, res) => {
+    const deviceId = req.params.id;
+    const { timeWindow } = req.body;
 
-        try {
-            let pipeline = [
-                { $match: { device_id: deviceId } },
-                { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
-            ];
+    try {
+        let pipeline = [
+            { $match: { device_id: deviceId } },
+            { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
+        ];
 
-            // Add sampling stage for each time window
-            const sampleSize = 50; // Desired number of samples
+        const sampleSize = 50; // Desired number of samples
+
+        if (timeWindow === 'realTime') {
+            // For real-time window, get the last 50 documents
+            pipeline.push({ $limit: sampleSize });
+        } else {
+            let matchStage = {};
 
             if (timeWindow === 'year') {
-                pipeline.push({ $match: { timestamp: { $gte: new Date(new Date().getFullYear(), 0, 1) } } });
+                matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), 0, 1) } };
             } else if (timeWindow === 'month') {
-                pipeline.push({ $match: { timestamp: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } } });
+                matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } };
             } else if (timeWindow === 'week') {
-                const oneWeekAgo = new Date(new Date() - 7 * 24 * 60 * 60 * 1000);
-                pipeline.push({ $match: { timestamp: { $gte: oneWeekAgo } } });
+                const oneWeekAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
+                matchStage = { timestamp: { $gte: oneWeekAgo } };
             } else if (timeWindow === 'day') {
-                const oneDayAgo = new Date(new Date() - 24 * 60 * 60 * 1000);
-                pipeline.push({ $match: { timestamp: { $gte: oneDayAgo } } });
+                const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+                matchStage = { timestamp: { $gte: oneDayAgo } };
             } else if (timeWindow === 'hour') {
-                const oneHourAgo = new Date(new Date() - 60 * 60 * 1000);
-                pipeline.push({ $match: { timestamp: { $gte: oneHourAgo } } });
+                const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000);
+                matchStage = { timestamp: { $gte: oneHourAgo } };
             }
 
-            pipeline.push({ $sample: { size: sampleSize } }); // Add sampling stage to select 50 samples
-            console.log(pipeline)
-            // Perform aggregation
-            let aggregatedData = await SensorData.aggregate(pipeline);
+            // Add the match stage to filter by the specified time window
+            pipeline.push({ $match: matchStage });
 
-            if (aggregatedData.length > 0) {
-                if ('moisture' in aggregatedData[aggregatedData.length - 1]) {
-                    lastMoistureValue = aggregatedData[aggregatedData.length - 1].moisture;
-
+            // Group by intervals to downsample and calculate averages
+            pipeline.push({
+                $group: {
+                    _id: {
+                        $toDate: {
+                            $subtract: [
+                                { $toLong: "$timestamp" },
+                                { $mod: [{ $toLong: "$timestamp" }, { $multiply: [1000, 60] }] } // Adjust the interval as needed
+                            ]
+                        }
+                    },
+                    avgValue: { $avg: "$value" }, // Replace 'value' with the actual field name to average
+                    count: { $sum: 1 }
                 }
-            }
+            });
 
-            return res.json(aggregatedData);
+            // Sort the grouped results by _id (timestamp) in descending order
+            pipeline.push({ $sort: { _id: -1 } });
 
-        } catch (error) {
-            console.error('Error retrieving sensor data:', error);
-            res.status(500).send('Internal Server Error');
+            // Limit to 50 samples
+            pipeline.push({ $limit: sampleSize });
         }
-    });
+
+        // Perform aggregation
+        let aggregatedData = await SensorData.aggregate(pipeline);
+
+        return res.json(aggregatedData);
+
+    } catch (error) {
+        console.error('Error retrieving sensor data:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 
     // devices sends data to this endpoint. get sensor data from nodeMcu and save to database
@@ -580,10 +533,10 @@ async function deviceController(app) {
             console.error('Error sending notification:', error);
         }
     };
-    function sendWebNotification(message){
+    function sendWebNotification(message) {
         app.post('/api/send-notification', (req, res) => {
             req.body.message = message;
-            
+
             res.sendStatus(200);
         });
     }
@@ -591,9 +544,12 @@ async function deviceController(app) {
         return deviceIPs[deviceId];
     }
 
-    app.get('/api/predictMoisture', async (req, res) => {
+    app.post('/api/predictMoisture', async (req, res) => {
         // const deviceId = req.query.device_id; // Retrieve deviceId from query parameters
         console.log('predictMoisture')
+        var moistureArray = req.body.moistureArray;
+        var data = req.body.data;
+        // console.log(req.body)
 
         try {
             // if (!deviceId) {
@@ -602,15 +558,32 @@ async function deviceController(app) {
 
             // let lastMoistureValue = await getLastMoistureValue(deviceId);
             let filteredWeather = getFilteredWeatherData();
+            var predictedMoistureArray = [];
+            console.log(moistureArray)
+            // console.log(data)
+            const filteredArray = moistureArray.filter(element => element !== null && element !== undefined);
+
+            try {
+                // Asynchronously predict moisture for each last moisture value
+                predictedMoistureArray = await Promise.all(filteredArray.map(async moistureValue => {
+                    try {
+                        return await predictMoisture(filteredWeather, moistureValue);
+                    } catch (error) {
+                        console.error(`Error predicting moisture: ${error}`);
+                        return null; // Handle error gracefully
+                    }
+                }));
+                console.log(predictedMoistureArray);
+            } catch (error) {
+                console.error(`Error predicting moisture: ${error}`);
+            }
+            console.log(filteredWeather)
+
             console.log('predictMoisture')
 
-            console.log(filteredWeather)
-            console.log(lastMoistureValue)
-
-            let predictedMoisture = await predictMoisture(filteredWeather, lastMoistureValue);
-            console.log(predictedMoisture)
+            console.log(predictedMoistureArray)
             // Send predictions as response
-            res.status(200).json({ predictedMoisture });
+            res.status(200).json({ predictedMoistureArray });
         } catch (error) {
             console.error('Error:', error);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -646,7 +619,6 @@ async function deviceController(app) {
         const forecastDataString = JSON.stringify(forecastData);
 
         const spawn = require("child_process").spawn;
-        console.log(forecastDataString)
         console.log(initialSoilMoisture)
 
         const pythonProcess = spawn('python', ["predict4.py", forecastDataString, initialSoilMoisture, modelPath]);
@@ -661,8 +633,9 @@ async function deviceController(app) {
                 resolve(data.toString())
             });
         });
-
     }
+
+
 
     async function validateApiKey2(req, res, next) {
         try {

@@ -115,8 +115,10 @@ body {
 
 .spinner-container {
     position: absolute;
-    top: 50%; /* Position the child element 50% from the top of the parent */
-    left: 50%; /* Position the child element 50% from the left of the parent */
+    /* top: 50%;
+    left: 50%; */
+    top: 40%;
+    left: 53%;
     transform: translate(-50%, -50%); /* Center the child element exactly in the middle */
     padding: 20px;
 }

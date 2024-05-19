@@ -8,7 +8,6 @@ const targetPoints = 50;
 
 var chartLoaded = false;
 let device = {};
-let predictedMoistureChart;
 let predictedMoistureChartLoaded = false;
 
 const sensorController = new SensorController();
@@ -19,6 +18,8 @@ const devicesView = new DevicesView();
 
 let fetchDataInterval;
 let user;
+let userDevicesData = [];
+var savedWeather;
 
 function eventListeners() {
   document.getElementById('loginButton').addEventListener('click', function () {
@@ -75,17 +76,17 @@ function resizeGrid(id, parentId) {
 
 async function login() {
   let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
-
+  console.log(response)
+  localStorage.setItem('apiKey', response.user.api_key);
   userId = response.userId;
   let userDevices = await deviceController.getDevices(userId);
   deviceController.loadDevicesGrid(userId);
   user = response.user;
   devicesView.devices = userDevices;
   try {
-    let userDevices = await sensorController.getAllDevicesData();
-    console.log(userDevices);
-    loadDevicesCharts(userDevices);
-
+    userDevicesData = await sensorController.getAllDevicesData(userId);
+    console.log(userDevicesData);
+    loadDevicesCharts(userDevicesData);
   } catch (error) {
 
   }
@@ -121,22 +122,47 @@ async function fillUserProfileData(data) {
   document.getElementById('usernameView').value = data.username;
   document.getElementById('useWeatherButton').checked = data.useWeather;
   document.getElementById('toggleSmsNotifications').checked = data.smsNotifications;
-  document.getElementById('phoneNumberInput').value = data.phoneNumber;
+  document.getElementById('phoneNumberInput').value = data.phoneNumber || '';
 
   profileView.toggleUseWeatherButton();
   // document.getElementById('realTimeTimeWindow').checked = true;
   if (data.useWeather) {
     $('#predictionDiv').show();
     let weatherData = await profileController.getWeatherData(profileView.user);
+    savedWeather = weatherData;
     $('#weatherContainer').html(null);
     document.getElementById('weatherContainer').appendChild(profileView.addWeatherCards(weatherData));
     saveDailyWeatherData(weatherData);
-    getPredictedMoisture();
+
+    let lastMoistureValues = [];
+    console.log(userDevicesData)
+    if (userDevicesData.length > 0) {
+      userDevicesData.forEach(function (data) {
+        console.log(data)
+        lastMoistureValues.push(data[data.length - 1].moisture);
+      })
+      console.log(weatherData)
+
+      console.log(lastMoistureValues)
+      let predictions = await deviceController.predictMoisture(weatherData, lastMoistureValues);
+      let predictionCharts = document.querySelectorAll('.predictionChart');
+      console.log(predictions)
+
+      for (i = 0; i < predictionCharts.length; i++) {
+        let nextSibling = predictionCharts[i].nextSibling.firstChild;
+        updatePredictionChart(predictions.predictedMoistureArray[i], predictionCharts[i].id, nextSibling.id);
+      }
+
+    }
+
+
   } else {
     $('#predictionDiv').hide();
   }
 }
-
+function getLoadingIconId(){
+  
+}
 async function register() {
   if (document.getElementById('usernameRegister').value.length > 0 &&
     document.getElementById('passwordRegister').value.length > 0) {
@@ -312,33 +338,46 @@ function createCharts(devicesData) {
   }
 }
 
-async function getPredictedMoisture() {
-  // $('#predictionChartLoadingIcon').show();
-  // document.getElementById('predictedMoistureChart').style.opacity = 0.5;
+async function getPredictedMoisture(deviceId) {
 
-  // predictedMoistureChart.data.datasets[0].data = [];
-  // predictedMoistureChart.update();
-  // let predictedMoisture;
+  console.log(deviceId)
+  let chartId = 'predictedMoistureChart_' + deviceId;
+  let chart = predictedMoistureCharts.find(chart => chart.chartId === chartId);
 
-  // try {
-  //   predictedMoisture = await profileController.getPredictedMoisture();
+  let loadingIcon = document.getElementById(chartId).nextSibling.firstChild;
 
-  // } catch {
-  //   showAlert('alert', 'Wrong username or password');
-  //   return;
-  // }
-  // console.log(predictedMoisture)
-  // // if(predictedMoistureChart){
-  // //   predictedMoistureChart.destroy();
-  // // }
-  // // loadPredictedMoistureChart(predictedMoisture);
+  $(loadingIcon).show();
+  document.getElementById('predictedMoistureChart_' + deviceId).style.opacity = 0.5;
+  console.log(chart.data.datasets[0]);
+  let lastMoistureValues = [];
 
-  // // if (!predictedMoistureChartLoaded) {
-  // //   loadPredictedMoistureChart(predictedMoisture);
-  // //   predictedMoistureChartLoaded = true;
+  if (userDevicesData.length > 0) {
+    userDevicesData.forEach(function (data) {
+      console.log(data)
+      if (data[data.length - 1].device_id === deviceId) {
+        lastMoistureValues.push(data[data.length - 1].moisture);
+      }
+    })
+  }
 
-  // // } else {
-  // updatePredictionChart(predictedMoisture);
-  // }
+  let lastMoistureValue = chart.data.datasets[0];
+  chart.data.datasets[0].data = [];
+  chart.update();
+  let predictedMoisture;
+
+  try {
+    console.log(savedWeather)
+    console.log(loadingIcon.id)
+
+    let predictions = await deviceController.predictMoisture(savedWeather, lastMoistureValues);
+
+    updatePredictionChart(predictions.predictedMoistureArray[0], chartId, loadingIcon.id)
+
+  } catch(error) {
+    console.log(error)
+    showAlert('alert', 'Error getting moisture prediction: ' + error);
+    return;
+  }
+  console.log(predictedMoisture)
 
 }

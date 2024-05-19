@@ -101,6 +101,10 @@ class ProfileController {
       method: 'GET',
       success: function (response) {
         console.log('Logged out successfully');
+
+        document.getElementById('chartsContainer').innerHTML = '';
+
+              
         document.getElementById('loginContainer').style.display = 'block';
         document.getElementById('main').classList.add('d-none');
       },
