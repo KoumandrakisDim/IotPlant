@@ -12,10 +12,13 @@ with open("test.weatherdatas.json", "r") as f:
     weather_data = json.load(f)
 
 def trimmed_mean(data, trim_percentage):
+    if len(data) == 0:  # Check if data is empty
+        return None  # Return None if data is empty
     trimmed_count = int(len(data) * trim_percentage / 100)
     sorted_data = sorted(data)
     trimmed_data = sorted_data[trimmed_count:-trimmed_count]
-    return np.mean(trimmed_data)
+    mean_value = np.mean(trimmed_data)
+    return mean_value if not np.isnan(mean_value) else None  # Check for NaN after calculating mean
 
 # Group soil moisture data by date and calculate trimmed mean soil moisture
 trimmed_mean_soil_moisture = defaultdict(list)
@@ -38,23 +41,14 @@ for entry in weather_data:
     if all(val is not None for val in [temperature, humidity, wind_speed]):  # Check for missing values
         trimmed_mean_weather_data[date].append((temperature, humidity, wind_speed))
 
-for date, data in trimmed_mean_weather_data.items():
-    temperatures = [temp for temp, _, _ in data]
-    humidities = [humidity for _, humidity, _ in data]
-    wind_speeds = [wind_speed for _, _, wind_speed in data]
-    temperature_trimmed_mean = trimmed_mean(temperatures, 10) if temperatures else None  # Example: Trim 10% from both ends
-    humidity_trimmed_mean = trimmed_mean(humidities, 10) if humidities else None  # Example: Trim 10% from both ends
-    wind_speed_trimmed_mean = trimmed_mean(wind_speeds, 10) if wind_speeds else None  # Example: Trim 10% from both ends
-    trimmed_mean_weather_data[date] = {"temperature": temperature_trimmed_mean, "humidity": humidity_trimmed_mean, "wind_speed": wind_speed_trimmed_mean}
-
 # Merge weather data with soil moisture data
 merged_data = {}
 for date in set(trimmed_mean_soil_moisture.keys()) & set(trimmed_mean_weather_data.keys()):
     merged_data[date] = {
         "soil_moisture": trimmed_mean_soil_moisture[date],
-        "temperature": trimmed_mean_weather_data[date]["temperature"],
-        "humidity": trimmed_mean_weather_data[date]["humidity"],
-        "wind_speed": trimmed_mean_weather_data[date]["wind_speed"]
+        "temperature": trimmed_mean_weather_data[date][0][0],  # Extract temperature
+        "humidity": trimmed_mean_weather_data[date][0][1],     # Extract humidity
+        "wind_speed": trimmed_mean_weather_data[date][0][2]     # Extract wind speed
     }
 
 # Calculate evapotranspiration (assuming sequential dates)

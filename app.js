@@ -6,7 +6,7 @@ const path = require('path');
 const ejs = require('ejs');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/smartPlant';
+const mongoURI = process.env.MONGODB_URI || 'mongodb://0.0.0.0:27017/smartPlant';
 const cors = require('cors');
 const socketIo = require('socket.io');
 require('dotenv').config();

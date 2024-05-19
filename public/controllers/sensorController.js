@@ -37,7 +37,7 @@ class SensorController {
         return new Promise(function (resolve, reject) {
             // Use jQuery's AJAX function
             $.ajax({
-                url: `/api/getAllSensosrData`, // Adjust the URL to match your server route
+                url: `/api/devices/getAllSensorData`, // Adjust the URL to match your server route
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ timeWindow: timeWindow }),

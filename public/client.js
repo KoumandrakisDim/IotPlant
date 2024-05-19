@@ -2,7 +2,6 @@ eventListeners();
 let userId = '';
 let devices = [];
 
-let devicesChart;
 let originalData = []; // Your initial data
 const targetPoints = 50;
 // let socket;
@@ -33,20 +32,8 @@ function eventListeners() {
   document.getElementById('addDevice').addEventListener('click', newDeviceShowModal);
   document.getElementById('saveNewDevice').addEventListener('click', newDevice);
 
-  const timeWindowRadios = document.getElementsByName('timeWindowRadio');
 
-  // Attach an event listener to each radio button
-  for (const radio of timeWindowRadios) {
-    radio.addEventListener('change', changeTimeWindow);
-  }
-  document.getElementById('predictMoistureButton').addEventListener('click', getPredictedMoisture);
 
-  $('#realTimeTimeWindowButton').on('click', () => selectTimeWindowClick('realTimeTimeWindowButton', 'realTime'));
-  $('#hourTimeWindowButton').on('click', () => selectTimeWindowClick('hourTimeWindowButton', 'hour'));
-  $('#dayTimeWindowButton').on('click', () => selectTimeWindowClick('dayTimeWindowButton', 'day'));
-  $('#weekTimeWindowButton').on('click', () => selectTimeWindowClick('weekTimeWindowButton', 'week'));
-  $('#monthTimeWindowButton').on('click', () => selectTimeWindowClick('monthTimeWindowButton', 'month'));
-  $('#yearTimeWindowButton').on('click', () => selectTimeWindowClick('yearTimeWindowButton', 'year'));
   $(window).on('resize', function () {
     hideColumnsBasedOnScreenSize('devicesContainer');
     resizeGrid('devicesGrid', 'devicesContainer')
@@ -85,15 +72,7 @@ function resizeGrid(id, parentId) {
   let newWidth = grid.parent().width(); // Use parent() to select the parent container and width() method to get its width
   $("#" + id).jqGrid("setGridWidth", newWidth, true);
 }
-function selectTimeWindowClick(timeWindowButton, timeWindow) {
-  let timeWindowButtons = document.querySelectorAll('.timeWindowButton');
-  timeWindowButtons.forEach(function (button) {
-    button.classList.remove('selectedTimeWindow');
-  })
 
-  document.getElementById(timeWindowButton).classList.add('selectedTimeWindow');
-  changeTimeWindow(device.device_id, timeWindow);
-}
 async function login() {
   let response = await profileController.loginAjax(document.getElementById('username').value, document.getElementById('password').value);
 
@@ -102,17 +81,26 @@ async function login() {
   deviceController.loadDevicesGrid(userId);
   user = response.user;
   devicesView.devices = userDevices;
+  try {
+    let userDevices = await sensorController.getAllDevicesData();
+    console.log(userDevices);
+    loadDevicesCharts(userDevices);
+
+  } catch (error) {
+
+  }
+
   // $('#devicesContainer').html(null);
 
   // userDevices.forEach(function (device) {
   //   document.getElementById('devicesContainer').appendChild(createDevicesList(device));
   // })
-  if (userDevices[0]) {
-    // sensorController.getDeviceData(userDevices[0].device_id, 'realTime', true);
-    device = userDevices[0];
-    console.log(device)
-    selectTimeWindowClick('realTimeTimeWindowButton', 'realTime');
-  }
+  // if (userDevices[0]) {
+  //   // sensorController.getDeviceData(userDevices[0].device_id, 'realTime', true);
+  //   device = userDevices[0];
+  //   console.log(device)
+  //   selectTimeWindowClick('realTimeTimeWindowButton', 'realTime');
+  // }
 
   showContainer('dashboard');
   document.getElementById('main').classList.remove('d-none');
@@ -122,7 +110,7 @@ async function login() {
 
   fillUserProfileData(response.user);
   // socket = io('http://localhost:' + response.port);
-  loadPredictedMoistureChart();
+  // loadPredictedMoistureChart();
 
 
 
@@ -186,126 +174,7 @@ function loadPage(url) {
 // function fetchSensorData(){
 
 // }
-/**
- * 
- * @param {*} data 
- */
-function loadChart(data, device) {
-  let labels = [];
-  let graphDatamoisture = [];
-  // let filteredData = filterSensorData(data);
-  let graphDatatempterature = [];
-  let graphDatahumidity = [];
-  let filteredData = data;
 
-  filteredData.forEach(function (deviceData) {
-
-    labels.push(formatDateString(deviceData.timestamp));
-    graphDatamoisture.push(deviceData.moisture);
-    graphDatatempterature.push(deviceData.temperature);
-    graphDatahumidity.push(deviceData.humidity);
-
-    devices = data;
-  })
-
-  var datasets = [{
-    label: 'Moisture',
-    data: graphDatamoisture,
-    borderColor: 'rgba(0, 128, 255, 1)', // Light blue
-    backgroundColor: 'rgba(0, 128, 255, 0.2)', // Light blue with transparency
-    borderWidth: 2,
-    pointRadius: 2, // Adjust point radius
-    pointBorderWidth: 2 // Adjust point border width
-  }, {
-    label: 'Temperature',
-    data: graphDatatempterature,
-    borderColor: 'rgba(255, 99, 71, 1)', // Tomato red
-    backgroundColor: 'rgba(255, 99, 71, 0.2)', // Tomato red with transparency
-    borderWidth: 2,
-    pointRadius: 2, // Adjust point radius
-    pointBorderWidth: 2 // Adjust point border width
-  }, {
-    label: 'Humidity',
-    data: graphDatahumidity,
-    borderColor: 'rgba(128, 128, 128, 1)', // Gray
-    backgroundColor: 'rgba(128, 128, 128, 0.2)', // Gray with transparency
-    borderWidth: 2,
-    pointRadius: 2, // Adjust point radius
-    pointBorderWidth: 2 // Adjust point border width
-  }];
-
-  const ctx = document.getElementById('devicesChart');
-  // let newGraphDiv = document.createElement('div')
-  // document.getElementById('devicesChart').appendChild(newGraphDiv);
-
-  // const filteredData = graphData.filter((point, index) => index % n === 0);
-  devicesChart = new Chart(ctx, {
-    type: 'line',
-
-    data: {
-      labels: labels, // Initial X-axis labels
-      datasets: datasets,
-      fill: false,
-      borderColor: 'rgb(75, 192, 192)',
-      tension: 0.1
-    },
-    options: {
-      plugins: {
-        annotation: {
-          annotations: {
-            minLine: {
-              type: 'line',
-              mode: 'horizontal',
-              scaleID: 'y',
-              value: device.min_moisture,
-              borderColor: 'red',
-              borderWidth: 1,
-              label: {
-                content: 'Minimum Value', // Label text
-                enabled: true, // Show label
-                position: 'left', // Label position
-                font: {
-                  size: 12, // Adjust font size as needed
-                },
-                // content: ['This is my text', 'This is my text, second line'],
-              }
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          display: false,
-          ticks: {
-            stepSize: 20 // Adjust the limit as needed
-          }
-        },
-        y: {
-          min: 0,    // Set the minimum value for the Y-axis
-          max: 105,  // Set the maximum value for the Y-axis
-          ticks: {
-            stepSize: 10  // Set the step size between ticks (optional)
-          },
-          title: {
-            display: true,
-            text: 'Moisture Level',
-          },
-        },
-      },
-      animation: {
-        duration: 0, // Set animation duration to 0 for no animation
-      },
-      animations: {
-        tension: {
-          duration: 1000,
-          easing: 'linear',
-        }
-      },
-    },
-  });
-
-
-}
 function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -325,130 +194,10 @@ function getNext13Days() {
 
   return dates;
 }
-function loadPredictedMoistureChart(data) {
-
-  // data = data.predictedMoisture;
-  let labels = [];
-  let graphData = [];
-  // let filteredData = filterSensorData(data);
-
-  // let array = filterArray(data);
-
-  // array.forEach(function (deviceData) {
-  //   labels.push(formatDateString(deviceData.timestamp));
-  //   graphData.push(deviceData.value);
-  //   devices = data;
-  // })
-  let dates = getNext13Days();
-
-  const ctx = document.getElementById('predictedMoistureChart');
-  // const filteredData = graphData.filter((point, index) => index % n === 0);
-
-  var datasets = [{
-    label: 'Predicted Moisture',
-    borderColor: 'rgba(0, 128, 255, 1)', // Light blue
-    backgroundColor: 'rgba(0, 128, 255, 0.2)', // Light blue with transparency
-    borderWidth: 2,
-    pointRadius: 2, // Adjust point radius
-    pointBorderWidth: 2 // Adjust point border width
-  }, {
-    label: 'Predicted evapotranspiration',
-    borderColor: '#4fac31', // Tomato red
-    backgroundColor: '#4fac31', // Tomato red with transparency
-    borderWidth: 2,
-    pointRadius: 2, // Adjust point radius
-    pointBorderWidth: 2 // Adjust point border width
-  }];
-  predictedMoistureChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: dates, // Initial X-axis labels
-      datasets: datasets,
-    },
-    options: {
-      plugins: {
-        annotation: {
-          annotations: {
-            minLine: {
-              type: 'line',
-              mode: 'horizontal',
-              scaleID: 'y',
-              value: devicesView.devices[0].min_moisture,
-              borderColor: 'red',
-              borderWidth: 1,
-              label: {
-                content: 'Minimum Value', // Label text
-                enabled: true, // Show label
-                position: 'left', // Label position
-                font: {
-                  size: 12, // Adjust font size as needed
-                },
-                // content: ['This is my text', 'This is my text, second line'],
-              }
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          display: true,
-          ticks: {
-            stepSize: 10 // Adjust the limit as needed
-          }
-        },
-        y: {
-          min: 0,    // Set the minimum value for the Y-axis
-          max: 105,  // Set the maximum value for the Y-axis
-          ticks: {
-            stepSize: 1  // Set the step size between ticks (optional)
-          },
-          title: {
-            display: true,
-            text: 'Moisture Level',
-          },
-        },
-      },
-      animation: {
-        duration: 1000, // Set animation duration to 0 for no animation
-      },
-      animations: {
-        tension: {
-          duration: 1000,
-          easing: 'linear',
-        }
-      },
-    },
-  });
-  $('#predictionChartLoadingIcon').hide();
-  document.getElementById('predictedMoistureChart').style.opacity = 1;
 
 
-}
-function updatePredictionChart(data) {
-  console.log(data)
-  // data = filterArray(data.predictedMoisture);
-  // Remove newline characters
-  const cleanedDataString = data.predictedMoisture.replace(/\r?\n|\r/g, '');
-
-  // Parse the string into an object
-  const dataObject = JSON.parse(cleanedDataString);
-
-  console.log(cleanedDataString)
-  console.log(dataObject)
-
-  // Extract the predictedMoisture array
-  // const predictedMoistureArray = JSON.parse(dataObject);
-
-  predictedMoistureChart.data.datasets[0].data = dataObject.predictedMoisture;
-  predictedMoistureChart.data.datasets[1].data = dataObject.predictedEvapotranspiration;
-
-  predictedMoistureChart.update();
-  $('#predictionChartLoadingIcon').hide();
-  document.getElementById('predictedMoistureChart').style.opacity = 1;
-
-}
 function filterSensorData(data) {
-  console.log(data)
+
   let selectedTimeWindow = getSelectedValueRadio();
   let targetPoints = 70;
   if (isPhone()) {
@@ -528,29 +277,7 @@ function addRealTimeDataToChart(newValue) {
   devicesChart.update();
 }
 
-function updateChart(data, timeWindow) {
 
-  if (timeWindow !== 'realTime') {
-    // data = filterSensorData(data);
-    data = data;
-
-  }
-  console.log(timeWindow)
-  const valuesArray = data.map(obj => obj.moisture);
-  let labelsArray = data.map(obj => obj.timestamp);
-  const temperatureArray = data.map(obj => obj.temperature);
-  const humidityArray = data.map(obj => obj.humidity);
-
-  labelsArray = labelsArray.map(formatDateString);
-
-  devicesChart.data.datasets[0].data = valuesArray;
-  devicesChart.data.datasets[1].data = temperatureArray;
-  devicesChart.data.datasets[2].data = humidityArray;
-
-  devicesChart.data.labels = labelsArray;
-
-  devicesChart.update();
-}
 
 // Function to process the WebSocket data and update the chart
 function processMoistureData(chart, moistureData) {
@@ -572,49 +299,13 @@ function processMoistureData(chart, moistureData) {
   // Return the updated labels and data
   return { labels, data };
 }
-/**
- * 
- * @param {*} device_id 
- * @param {*} timeWindow 
- */
-async function changeTimeWindow(device_id, timeWindow) {
 
-  try {
-    if (!timeWindow) {
-      timeWindow = getSelectedValueRadio();
-    }
-    let response = await sensorController.getAllDevicesData(device.device_id, timeWindow);
-    
-    // let devicesData = await sensorController.getAllDevicesData(timeWindow);
-
-    originalData = response;
-    console.log(originalData)
-
-    if (!chartLoaded) {
-      loadChart(response, devicesView.devices[0]);
-      chartLoaded = true;
-    }
-    if (timeWindow === 'realTime') {
-      if (!fetchDataInterval && profileView.user.toggleSaveSensorData) {
-        fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 21000);
-      }
-
-    } else {
-      clearInterval(fetchDataInterval);
-      fetchDataInterval = null;
-    }
-    updateChart(response, timeWindow);
-  } catch {
-    showAlert('alert', 'Could not get sensor data');
-  }
-
-}
 
 function createCharts(devicesData) {
   if (!chartLoaded) {
     devicesData.forEach(function (device) {
 
-      loadChart(device.data, device);
+      // loadChart(device.data, device);
       chartLoaded = true;
     })
 
@@ -622,32 +313,32 @@ function createCharts(devicesData) {
 }
 
 async function getPredictedMoisture() {
-  $('#predictionChartLoadingIcon').show();
-  document.getElementById('predictedMoistureChart').style.opacity = 0.5;
+  // $('#predictionChartLoadingIcon').show();
+  // document.getElementById('predictedMoistureChart').style.opacity = 0.5;
 
-  predictedMoistureChart.data.datasets[0].data = [];
-  predictedMoistureChart.update();
-  let predictedMoisture;
+  // predictedMoistureChart.data.datasets[0].data = [];
+  // predictedMoistureChart.update();
+  // let predictedMoisture;
 
-  try {
-    predictedMoisture = await profileController.getPredictedMoisture();
+  // try {
+  //   predictedMoisture = await profileController.getPredictedMoisture();
 
-  } catch {
-    showAlert('alert', 'Wrong username or password');
-    return;
-  }
-  console.log(predictedMoisture)
-  // if(predictedMoistureChart){
-  //   predictedMoistureChart.destroy();
+  // } catch {
+  //   showAlert('alert', 'Wrong username or password');
+  //   return;
   // }
-  // loadPredictedMoistureChart(predictedMoisture);
+  // console.log(predictedMoisture)
+  // // if(predictedMoistureChart){
+  // //   predictedMoistureChart.destroy();
+  // // }
+  // // loadPredictedMoistureChart(predictedMoisture);
 
-  // if (!predictedMoistureChartLoaded) {
-  //   loadPredictedMoistureChart(predictedMoisture);
-  //   predictedMoistureChartLoaded = true;
+  // // if (!predictedMoistureChartLoaded) {
+  // //   loadPredictedMoistureChart(predictedMoisture);
+  // //   predictedMoistureChartLoaded = true;
 
-  // } else {
-  updatePredictionChart(predictedMoisture);
+  // // } else {
+  // updatePredictionChart(predictedMoisture);
   // }
 
 }
