@@ -323,10 +323,6 @@ async function deviceController(app) {
                     .sort({ timestamp: -1 })
                     .limit(50);
             }));
-            var lastMoistureValues = [];
-            sensorData.forEach(function (data) {
-                lastMoistureValues.push(data[data.length - 1].moisture);
-            })
 
             return res.json(sensorData);
 
@@ -342,69 +338,61 @@ async function deviceController(app) {
         const { timeWindow } = req.body;
 
         try {
+            const now = new Date();
             let pipeline = [
-                { $match: { device_id: deviceId } },
-                { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
+                { $match: { device_id: deviceId } }
             ];
 
-            const sampleSize = 50;
-            // let pipeline = [];
-
-            if (timeWindow === 'realTime' || timeWindow === 'realtime') {
-                // For real-time window, get the last 50 documents
-                pipeline.push({ $limit: sampleSize });
+            let matchStage = {};
+            if (timeWindow === 'year') {
+                matchStage = { timestamp: { $gte: new Date(Date.UTC(now.getFullYear(), 0, 1)) } };
+            } else if (timeWindow === 'month') {
+                matchStage = { timestamp: { $gte: new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1)) } };
+            } else if (timeWindow === 'week') {
+                matchStage = { timestamp: { $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) } };
+            } else if (timeWindow === 'day') {
+                matchStage = { timestamp: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } };
+            } else if (timeWindow === 'hour') {
+                matchStage = { timestamp: { $gte: new Date(now.getTime() - 60 * 60 * 1000) } };
+            } else if (timeWindow === 'realtime') {
+                // For real-time, get the last 50 documents
+                pipeline.push(
+                    { $sort: { timestamp: -1 } },
+                    { $limit: 50 }
+                );
             } else {
-                let matchStage = {};
-
-                if (timeWindow === 'year') {
-                    matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), 0, 1) } };
-                } else if (timeWindow === 'month') {
-                    matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } };
-                } else if (timeWindow === 'week') {
-                    const oneWeekAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
-                    matchStage = { timestamp: { $gte: oneWeekAgo } };
-                } else if (timeWindow === 'day') {
-                    const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
-                    matchStage = { timestamp: { $gte: oneDayAgo } };
-                } else if (timeWindow === 'hour') {
-                    const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000);
-                    matchStage = { timestamp: { $gte: oneHourAgo } };
-                }
-
-                // Match the documents based on the time window
-                pipeline.push({ $match: matchStage });
-
-                // Sort documents by timestamp
-                pipeline.push({ $sort: { timestamp: 1 } });
-
-                // Use $bucketAuto to create 50 buckets based on timestamp
-                pipeline.push({
-                    $bucketAuto: {
-                        groupBy: "$timestamp",
-                        buckets: sampleSize,
-                        output: {
-                            moisture: { $avg: "$moisture" },
-                            temperature: { $avg: "$temperature" },
-                            humidity: { $avg: "$humidity" },
-                            timestamp: { $first: "$timestamp" },
-                        }
-                    }
-                });
-
-                // Project the results to include only the fields we want
-                pipeline.push({
-                    $project: {
-                        _id: 0,
-                        moisture: 1,
-                        temperature: 1,
-                        humidity: 1,
-                        timestamp: 1,
-                    }
-                });
+                return res.status(400).send('Invalid timeWindow specified');
             }
 
-            // Perform aggregation
+            if (timeWindow !== 'realTime') {
+                pipeline.push(
+                    { $match: matchStage },
+                    { $sort: { timestamp: 1 } } // Sort documents by timestamp in ascending order
+                );
+
+                const numberOfBins = 50;
+                pipeline.push(
+                    {
+                        $bucketAuto: {
+                            groupBy: "$timestamp",
+                            buckets: numberOfBins,
+                            output: {
+                                moisture: { $avg: "$moisture" },
+                                humidity: { $avg: "$humidity" },
+                                temperature: { $avg: "$temperature" },
+                                timestamp: { $push: "$timestamp" }
+                            }
+                        }
+                    }
+                );
+            }
+
+            console.log("Aggregation Pipeline:", JSON.stringify(pipeline, null, 2));
+            console.log("Match Stage:", JSON.stringify(matchStage, null, 2));
+
             let aggregatedData = await SensorData.aggregate(pipeline);
+            console.log(aggregatedData)
+
             return res.json(aggregatedData);
 
         } catch (error) {

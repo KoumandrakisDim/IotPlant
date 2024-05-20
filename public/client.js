@@ -139,7 +139,9 @@ async function fillUserProfileData(data) {
     if (userDevicesData.length > 0) {
       userDevicesData.forEach(function (data) {
         console.log(data)
-        lastMoistureValues.push(data[data.length - 1].moisture);
+        if(data.length > 0){
+          lastMoistureValues.push(data[data.length - 1].moisture);
+        }
       })
       console.log(weatherData)
 
