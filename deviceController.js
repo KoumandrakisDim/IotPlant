@@ -65,7 +65,7 @@ async function deviceController(app) {
         try {
             const minMoisture = parseInt(req.body.minMoisture) || 50;
             const maxMoisture = parseInt(req.body.maxMoisture) || 100;
-            const sampleRate = parseInt(req.body.sampleRate) || 20000;
+            const sampleRate = parseInt(req.body.sampleRate) || 20;
             const deviceId = req.body.device_id;
 
             const authHeader = req.headers.authorization;
@@ -73,27 +73,36 @@ async function deviceController(app) {
 
             const validationErrors = validateDeviceFields(minMoisture, maxMoisture, sampleRate);
 
+            const location = req.body.location || "Outdoors";
+
             if (validationErrors.length > 0) {
+                console.log(validationErrors)
+
                 return res.status(400).json({ errors: validationErrors });
             }
 
             const device = await Plant.findOne({ device_id: deviceId });
-            console.log(device.sampleRate)
+            console.log(minMoisture)
             console.log(sampleRate)
 
             const result = await Plant.findOneAndUpdate(
-                { device_id: req.body.device_id }, // Query condition
+                { device_id: deviceId }, // Query condition
                 {
                     device_id: deviceId,
-                    min_moisture: parseInt(minMoisture), max_moisture: parseInt(maxMoisture),
-                    location: req.body.location, sampleRate: parseInt(sampleRate)
+                    min_moisture: minMoisture, max_moisture: maxMoisture,
+                    location: location, sampleRate: sampleRate
                 },
             );
 
 
 
             if (device.sampleRate !== sampleRate) {
-                await setDeviceSampleRate(deviceId, sampleRate, apiKey);
+                let sampleRateResult = await setDeviceSampleRate(deviceId, sampleRate, apiKey);
+                if (!sampleRateResult.success) {
+                    console.warn('Failed to update sample rate on the device:', sampleRateResult.message);
+                    // Optionally handle the failure, e.g., log it, notify someone, etc.
+                    // But don't throw an error, so the rest of the edit process completes
+                }
             }
 
             return res.status(200).send('Device edited successfully');
@@ -209,7 +218,7 @@ async function deviceController(app) {
                     maxMoisture: device.max_moisture,
                     location: device.location,
                     sampleRate: device.sampleRate,
-                    action: `<i class='bi bi-pencil text-primary' style='cursor:pointer;' onclick="devicesView.editDevice('${device.device_id}')"></i><i class='bi bi-trash text-danger' style='cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
+                    action: `<i class='bi bi-pencil text-primary' style='padding-right:10%;cursor:pointer;' onclick="devicesView.editDevice('${device.device_id}')"></i><i class='bi bi-trash text-danger' style='padding-left:10%;cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
                 };
 
             });
@@ -288,8 +297,6 @@ async function deviceController(app) {
             // Check the response status code and handle accordingly
             if (response.status === 200) {
                 // API call successful, handle success response
-                console.log('sample rate updated.')
-                console.log(sampleRate);
                 return { success: true, message: 'Sample rate updated successfully' };
             } else {
                 // API call failed, handle error response
@@ -297,7 +304,7 @@ async function deviceController(app) {
             }
         } catch (error) {
             console.error('Error setting device sample rate:', error.message);
-            throw error; // Re-throw the error for the caller to handle
+            return { success: false, message: error.message }; // Re-throw the error for the caller to handle
         }
     }
 
@@ -330,75 +337,81 @@ async function deviceController(app) {
     });
 
     // Route to retrieve latest sensor data
-app.post('/api/getSensorData/:id', async (req, res) => {
-    const deviceId = req.params.id;
-    const { timeWindow } = req.body;
+    app.post('/api/getSensorData/:id', async (req, res) => {
+        const deviceId = req.params.id;
+        const { timeWindow } = req.body;
 
-    try {
-        let pipeline = [
-            { $match: { device_id: deviceId } },
-            { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
-        ];
+        try {
+            let pipeline = [
+                { $match: { device_id: deviceId } },
+                { $sort: { timestamp: -1 } } // Sort documents by timestamp in descending order
+            ];
 
-        const sampleSize = 50; // Desired number of samples
+            const sampleSize = 50;
+            // let pipeline = [];
 
-        if (timeWindow === 'realTime') {
-            // For real-time window, get the last 50 documents
-            pipeline.push({ $limit: sampleSize });
-        } else {
-            let matchStage = {};
+            if (timeWindow === 'realTime' || timeWindow === 'realtime') {
+                // For real-time window, get the last 50 documents
+                pipeline.push({ $limit: sampleSize });
+            } else {
+                let matchStage = {};
 
-            if (timeWindow === 'year') {
-                matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), 0, 1) } };
-            } else if (timeWindow === 'month') {
-                matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } };
-            } else if (timeWindow === 'week') {
-                const oneWeekAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
-                matchStage = { timestamp: { $gte: oneWeekAgo } };
-            } else if (timeWindow === 'day') {
-                const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
-                matchStage = { timestamp: { $gte: oneDayAgo } };
-            } else if (timeWindow === 'hour') {
-                const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000);
-                matchStage = { timestamp: { $gte: oneHourAgo } };
+                if (timeWindow === 'year') {
+                    matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), 0, 1) } };
+                } else if (timeWindow === 'month') {
+                    matchStage = { timestamp: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } };
+                } else if (timeWindow === 'week') {
+                    const oneWeekAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000);
+                    matchStage = { timestamp: { $gte: oneWeekAgo } };
+                } else if (timeWindow === 'day') {
+                    const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000);
+                    matchStage = { timestamp: { $gte: oneDayAgo } };
+                } else if (timeWindow === 'hour') {
+                    const oneHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000);
+                    matchStage = { timestamp: { $gte: oneHourAgo } };
+                }
+
+                // Match the documents based on the time window
+                pipeline.push({ $match: matchStage });
+
+                // Sort documents by timestamp
+                pipeline.push({ $sort: { timestamp: 1 } });
+
+                // Use $bucketAuto to create 50 buckets based on timestamp
+                pipeline.push({
+                    $bucketAuto: {
+                        groupBy: "$timestamp",
+                        buckets: sampleSize,
+                        output: {
+                            moisture: { $avg: "$moisture" },
+                            temperature: { $avg: "$temperature" },
+                            humidity: { $avg: "$humidity" },
+                            timestamp: { $first: "$timestamp" },
+                        }
+                    }
+                });
+
+                // Project the results to include only the fields we want
+                pipeline.push({
+                    $project: {
+                        _id: 0,
+                        moisture: 1,
+                        temperature: 1,
+                        humidity: 1,
+                        timestamp: 1,
+                    }
+                });
             }
 
-            // Add the match stage to filter by the specified time window
-            pipeline.push({ $match: matchStage });
+            // Perform aggregation
+            let aggregatedData = await SensorData.aggregate(pipeline);
+            return res.json(aggregatedData);
 
-            // Group by intervals to downsample and calculate averages
-            pipeline.push({
-                $group: {
-                    _id: {
-                        $toDate: {
-                            $subtract: [
-                                { $toLong: "$timestamp" },
-                                { $mod: [{ $toLong: "$timestamp" }, { $multiply: [1000, 60] }] } // Adjust the interval as needed
-                            ]
-                        }
-                    },
-                    avgValue: { $avg: "$value" }, // Replace 'value' with the actual field name to average
-                    count: { $sum: 1 }
-                }
-            });
-
-            // Sort the grouped results by _id (timestamp) in descending order
-            pipeline.push({ $sort: { _id: -1 } });
-
-            // Limit to 50 samples
-            pipeline.push({ $limit: sampleSize });
+        } catch (error) {
+            console.error('Error retrieving sensor data:', error);
+            res.status(500).send('Internal Server Error');
         }
-
-        // Perform aggregation
-        let aggregatedData = await SensorData.aggregate(pipeline);
-
-        return res.json(aggregatedData);
-
-    } catch (error) {
-        console.error('Error retrieving sensor data:', error);
-        res.status(500).send('Internal Server Error');
-    }
-});
+    });
 
 
     // devices sends data to this endpoint. get sensor data from nodeMcu and save to database

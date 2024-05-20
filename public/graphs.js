@@ -123,7 +123,7 @@ function loadChart(data, device) {
 
 }
 
-function loadPredictedMoistureChart(data, deviceId) {
+function loadPredictedMoistureChart(data, deviceId, i) {
 
     // data = data.predictedMoisture;
     let labels = [];
@@ -172,7 +172,7 @@ function loadPredictedMoistureChart(data, deviceId) {
                             type: 'line',
                             mode: 'horizontal',
                             scaleID: 'y',
-                            value: devicesView.devices[0].min_moisture,
+                            value: devicesView.devices[i].min_moisture,
                             borderColor: 'red',
                             borderWidth: 1,
                             label: {
@@ -289,7 +289,7 @@ function updatePredictionChart(data, chartId, loadingIconId) {
 
 function loadDevicesCharts(sensorData) {
     console.log(sensorData);
-
+    let i = 0;
     sensorData.forEach(function(deviceData) {
         console.log(deviceData);
 
@@ -300,7 +300,8 @@ function loadDevicesCharts(sensorData) {
             document.getElementById('chartsContainer').appendChild(createChartContainer(deviceId));
 
             loadChart(deviceData, deviceId);
-            loadPredictedMoistureChart(null, deviceId);
+            loadPredictedMoistureChart(null, deviceId, i);
+            i++;
         }
     });
 
