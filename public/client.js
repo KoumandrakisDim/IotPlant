@@ -346,7 +346,10 @@ async function getPredictedMoisture(deviceId) {
   let chartId = 'predictedMoistureChart_' + deviceId;
   let chart = predictedMoistureCharts.find(chart => chart.chartId === chartId);
 
-  let loadingIcon = document.getElementById(chartId).nextSibling.firstChild;
+  let loadingIcon;
+  if(document.getElementById(chartId)){
+    loadingIcon = document.getElementById(chartId).nextSibling.firstChild;
+  }
 
   $(loadingIcon).show();
   document.getElementById('predictedMoistureChart_' + deviceId).style.opacity = 0.5;
@@ -361,7 +364,6 @@ async function getPredictedMoisture(deviceId) {
           lastMoistureValues.push(data[data.length - 1].moisture);
         }
       }
-
     })
   }
 

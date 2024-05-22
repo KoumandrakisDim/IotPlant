@@ -148,8 +148,8 @@ class ProfileView {
         const data = {
             id: userId, username: $('#usernameView').val(), city: $('#city').val(),
             useWeather: document.getElementById('useWeatherButton').checked,
-            useWeather: document.getElementById('toggleSmsNotifications').checked,
-            phoneNumber: $('#phoneNumberInput').val(),
+            useSmsNotification: document.getElementById('toggleSmsNotifications').checked,
+            phoneNumber: $('#phoneNumberInput').val(), 
         };
 
         if (data.useWeather) {

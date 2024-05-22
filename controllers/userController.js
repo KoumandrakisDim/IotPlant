@@ -85,7 +85,7 @@ async function userController(app) {
 
             const updatedUser = await User.findOneAndUpdate(
                 { _id: data.id }, // Query condition
-                { name: data.username, city: data.city, useWeather: data.useWeather }, // Update fields
+                { name: data.username, city: data.city, useWeather: data.useWeather, phoneNumber: data.phoneNumber, smsNotifications: data.useSmsNotifications }, // Update fields
                 { new: true } // Return the updated document
             );
 
