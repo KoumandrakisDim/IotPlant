@@ -356,9 +356,12 @@ async function getPredictedMoisture(deviceId) {
   if (userDevicesData.length > 0) {
     userDevicesData.forEach(function (data) {
       console.log(data)
-      if (data[data.length - 1].device_id === deviceId) {
-        lastMoistureValues.push(data[data.length - 1].moisture);
+      if(data.length > 0){
+        if (data[data.length - 1].device_id === deviceId) {
+          lastMoistureValues.push(data[data.length - 1].moisture);
+        }
       }
+
     })
   }
 

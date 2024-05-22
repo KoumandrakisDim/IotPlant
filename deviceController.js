@@ -367,7 +367,7 @@ async function deviceController(app) {
             if (timeWindow !== 'realTime') {
                 pipeline.push(
                     { $match: matchStage },
-                    { $sort: { timestamp: 1 } } // Sort documents by timestamp in ascending order
+                    { $sort: { timestamp: -1 } } // Sort documents by timestamp in ascending order
                 );
 
                 const numberOfBins = 50;
@@ -380,18 +380,14 @@ async function deviceController(app) {
                                 moisture: { $avg: "$moisture" },
                                 humidity: { $avg: "$humidity" },
                                 temperature: { $avg: "$temperature" },
-                                timestamp: { $push: "$timestamp" }
+                                timestamp: { $min: "$timestamp" }
                             }
                         }
                     }
                 );
             }
 
-            console.log("Aggregation Pipeline:", JSON.stringify(pipeline, null, 2));
-            console.log("Match Stage:", JSON.stringify(matchStage, null, 2));
-
             let aggregatedData = await SensorData.aggregate(pipeline);
-            console.log(aggregatedData)
 
             return res.json(aggregatedData);
 
