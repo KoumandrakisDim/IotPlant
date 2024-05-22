@@ -13,11 +13,11 @@ let saveRealTimeData;
 
 var devicesArray = [];
 
-// const twilio = require('twilio');
-// const accountSid = process.env.SMS_accountSid;
-// const authToken = process.env.SMS_TOKEN;
-// const twilioPhoneNumber = '+12569801284';
-// const client = twilio(accountSid, authToken);
+const twilio = require('twilio');
+const accountSid = process.env.SMS_accountSid;
+const authToken = process.env.SMS_TOKEN;
+const twilioPhoneNumber = '+12569801284';
+const client = twilio(accountSid, authToken);
 
 async function deviceController(app) {
 
