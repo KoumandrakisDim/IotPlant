@@ -44,7 +44,6 @@ const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
-const io = socketIo(server);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -86,39 +85,40 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // MQTT broker connection options
-// const mqttOptions = {
-//     host: process.env.PORT || 3000,
-//     port: 1883,
-//     clientId: 'mqtt_api_client',
-//     username: 'mqtt_user',
-//     password: 'mqtt_password'
-// };
+const mqttOptions = {
+    host: process.env.MQTT_HOST || 'your_mqtt_broker_address',
+    port: process.env.MQTT_PORT || 1883,
+    clientId: 'mqtt_api_client',
+    username: process.env.MQTT_USERNAME || 'your_mqtt_username',
+    password: process.env.MQTT_PASSWORD || 'your_mqtt_password'
+};
 
-// // Connect to MQTT broker
-// const mqttClient = mqtt.connect(mqttOptions);
 
-// // Handle MQTT connection events
-// mqttClient.on('connect', () => {
-//     console.log('Connected to MQTT broker');
-// });
+// Connect to MQTT broker
+const mqttClient = mqtt.connect(mqttOptions);
 
-// mqttClient.on('error', (error) => {
-//     console.error('MQTT error:', error);
-// });
+// Handle MQTT connection events
+mqttClient.on('connect', () => {
+    console.log('Connected to MQTT broker');
+});
 
-// // API endpoint to send MQTT request to device
-// app.post('/sendMqttRequest', (req, res) => {
-//     const deviceId = req.body.deviceId;
-//     const message = req.body.message;
+mqttClient.on('error', (error) => {
+    console.error('MQTT error:', error);
+});
 
-//     // Publish message to device topic
-//     mqttClient.publish(`devices/${deviceId}`, message, (err) => {
-//         if (err) {
-//             console.error('Error publishing MQTT message:', err);
-//             res.status(500).json({ error: 'Failed to send MQTT request' });
-//         } else {
-//             console.log('MQTT message published');
-//             res.status(200).json({ message: 'MQTT request sent successfully' });
-//         }
-//     });
-// });
+// API endpoint to send MQTT request to device
+app.post('/sendMqttRequest', (req, res) => {
+    const deviceId = req.body.deviceId;
+    const message = req.body.message;
+
+    // Publish message to device topic
+    mqttClient.publish(`devices/${deviceId}`, message, (err) => {
+        if (err) {
+            console.error('Error publishing MQTT message:', err);
+            res.status(500).json({ error: 'Failed to send MQTT request' });
+        } else {
+            console.log('MQTT message published');
+            res.status(200).json({ message: 'MQTT request sent successfully' });
+        }
+    });
+});
