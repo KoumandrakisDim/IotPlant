@@ -139,7 +139,9 @@ async function fillUserProfileData(data) {
     if (userDevicesData.length > 0) {
       userDevicesData.forEach(function (data) {
         console.log(data)
-        lastMoistureValues.push(data[data.length - 1].moisture);
+        if(data.length > 0){
+          lastMoistureValues.push(data[data.length - 1].moisture);
+        }
       })
       console.log(weatherData)
 
@@ -344,7 +346,10 @@ async function getPredictedMoisture(deviceId) {
   let chartId = 'predictedMoistureChart_' + deviceId;
   let chart = predictedMoistureCharts.find(chart => chart.chartId === chartId);
 
-  let loadingIcon = document.getElementById(chartId).nextSibling.firstChild;
+  let loadingIcon;
+  if(document.getElementById(chartId)){
+    loadingIcon = document.getElementById(chartId).nextSibling.firstChild;
+  }
 
   $(loadingIcon).show();
   document.getElementById('predictedMoistureChart_' + deviceId).style.opacity = 0.5;
@@ -354,8 +359,10 @@ async function getPredictedMoisture(deviceId) {
   if (userDevicesData.length > 0) {
     userDevicesData.forEach(function (data) {
       console.log(data)
-      if (data[data.length - 1].device_id === deviceId) {
-        lastMoistureValues.push(data[data.length - 1].moisture);
+      if(data.length > 0){
+        if (data[data.length - 1].device_id === deviceId) {
+          lastMoistureValues.push(data[data.length - 1].moisture);
+        }
       }
     })
   }
