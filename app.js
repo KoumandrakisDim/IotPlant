@@ -3,35 +3,30 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const path = require('path');
-const ejs = require('ejs');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const mongoURI = process.env.MONGODB_URI || 'mongodb://0.0.0.0:27017/smartPlant';
 const cors = require('cors');
-const socketIo = require('socket.io');
 require('dotenv').config();
 const mqtt = require('mqtt');
 
 const app = express();
 
 app.use(session({
-    secret: 'TsifsaMotre',
+    secret: 'ok',
     resave: false,
     saveUninitialized: true,
 }));
 
 // const { setupWebSocket } = require('./setupWebsocket');
 const { endpoints } = require('./endpoints');
-const { deviceController } = require('./deviceController');
+const { deviceController } = require('./controllers/deviceController');
 const { userController } = require('./controllers/userController');
 app.use(bodyParser.json());
 
 endpoints(app);
 deviceController(app);
 userController(app);
-
-// const { arduinoWebsocket } = require('./arduinoWebsocket');
-// const { aiModel } = require('./aiModel/ai');
 
 app.use(cors());
 
@@ -44,11 +39,6 @@ const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
-
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-
 
 mongoose.connect(mongoURI)
     .then(() => {
@@ -85,26 +75,26 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // MQTT broker connection options
-const mqttOptions = {
-    host: process.env.MQTT_HOST || 'your_mqtt_broker_address',
-    port: process.env.MQTT_PORT || 1883,
-    clientId: 'mqtt_api_client',
-    username: process.env.MQTT_USERNAME || 'your_mqtt_username',
-    password: process.env.MQTT_PASSWORD || 'your_mqtt_password'
-};
+// const mqttOptions = {
+//     host: process.env.MQTT_HOST || 'your_mqtt_broker_address',
+//     port: process.env.MQTT_PORT || 1883,
+//     clientId: 'mqtt_api_client',
+//     username: process.env.MQTT_USERNAME || 'your_mqtt_username',
+//     password: process.env.MQTT_PASSWORD || 'your_mqtt_password'
+// };
 
 
-// Connect to MQTT broker
-const mqttClient = mqtt.connect(mqttOptions);
+// // Connect to MQTT broker
+// const mqttClient = mqtt.connect(mqttOptions);
 
-// Handle MQTT connection events
-mqttClient.on('connect', () => {
-    console.log('Connected to MQTT broker');
-});
+// // Handle MQTT connection events
+// mqttClient.on('connect', () => {
+//     console.log('Connected to MQTT broker');
+// });
 
-mqttClient.on('error', (error) => {
-    console.error('MQTT error:', error);
-});
+// mqttClient.on('error', (error) => {
+//     console.error('MQTT error:', error);
+// });
 
 // API endpoint to send MQTT request to device
 app.post('/sendMqttRequest', (req, res) => {

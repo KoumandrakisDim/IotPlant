@@ -174,15 +174,23 @@ async function userController(app) {
             'Wind speed (Km/h)': [],
             'Air humidity (%)': [],
             'pop': [],
-            'rain': []
+            'rain': [],
+            'temp_min': [],
+            'temp_max': [],
+            'solar_radiation': []
         };
 
         data.daily.forEach(function (entry) {
-            forecast['Air temperature (C)'].push((entry.temp.max + entry.temp.min) / 2);
+            let averageTemp = (entry.temp.day + entry.temp.min + entry.temp.max + entry.temp.night + entry.temp.eve + entry.temp.morn) / 6;
+            forecast['Air temperature (C)'].push(averageTemp);
             forecast['Wind speed (Km/h)'].push(entry.wind_speed);
             forecast['Air humidity (%)'].push(entry.humidity);
             forecast['pop'].push(entry.pop);
             forecast['rain'].push(entry.rain);
+            forecast['temp_min'].push(entry.temp.min);
+            forecast['temp_max'].push(entry.temp.max);
+            forecast['solar_radiation'].push(entry.uvi);
+
         });
 
         return forecast;
