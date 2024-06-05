@@ -318,7 +318,7 @@ async function deviceController(app) {
             // Step 2: Fetch the latest 50 sensor data entries for each device
             const sensorData = await Promise.all(deviceIds.map(async deviceId => {
                 return await SensorData.find({ device_id: deviceId })
-                    .sort({ timestamp: 1 })
+                    .sort({ timestamp: -1 })
                     .limit(50);
             }));
 

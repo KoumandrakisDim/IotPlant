@@ -1,6 +1,8 @@
 class DevicesView {
 
     async editDevice(deviceId) {
+        document.getElementById('newDeviceForm').classList.remove('was-validated');
+
         this.clearDeviceFormFields();
         document.getElementById('newDeviceModal').deviceId = deviceId;
         $('#newDeviceModal').modal('show');
@@ -36,12 +38,21 @@ class DevicesView {
     }
 }
 function newDeviceShowModal() {
+    document.getElementById('newDeviceForm').classList.remove('was-validated');
     devicesView.clearDeviceFormFields();
     document.getElementById('newDeviceModal').deviceId = '';
     $('#newDeviceModal').modal('show');
 }
 function newDevice() {
     let deviceId = document.getElementById('newDeviceModal').deviceId;
+    document.getElementById('newDeviceForm').classList.add('was-validated')
+    if(!checkDeviceFields()){
+        return false;
+    }
+
+    if(document.getElementById('newDeviceForm').classList.add('was-validated')){
+
+    }
     if (deviceId) {
         deviceController.editDevice({
             device_id: deviceId, name: document.getElementById('newDeviceName').value,
@@ -65,4 +76,28 @@ function newDevice() {
         }
     }
 
+}
+function checkDeviceFields(event) {
+    event.preventDefault(); // Prevent the form from submitting
+
+    let isInvalid = false;
+
+    const elements = [
+        { id: 'deviceMinMoistureInput', min: 0, max: 100 },
+        { id: 'deviceMaxMoistureInput', min: 0, max: 100 },
+        { id: 'deviceSampleRateInput', min: 1, max: 1000 },
+        { id: 'rootZoneDepthInput', min: 0, max: Infinity } // Assuming no upper limit for root zone depth
+    ];
+
+    for (const el of elements) {
+        const inputElement = document.getElementById(el.id);
+        if (!validateNumber(inputElement, el.min, el.max)) {
+            isInvalid = true;
+        }
+    }
+
+    if (!isInvalid && event.target.checkValidity()) {
+        // If all fields are valid, submit the form programmatically
+        event.target.submit();
+    }
 }

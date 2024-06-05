@@ -169,7 +169,7 @@ body {
     margin: 0;
 }
 .greenContainer {
-    background-color: rgb(125 255 110);
+    background-color: #a4cf83;
     padding: 12px;
     border-radius: 8px;
     margin: 0;
@@ -217,7 +217,7 @@ body {
 }
 
 .navLink:hover{
-    color: rgb(125 255 110);
+    color: #a4cf83;
 }
 
 .navLink:active{

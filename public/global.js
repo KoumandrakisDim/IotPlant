@@ -253,7 +253,36 @@ function filterWeatherVariables(hourlyForecast) {
     return forecastData;
 
 }
+function validateNumber(element, min, max) {
+    const value = element.value;
+    const regex = /^\d*\.?\d+$/;
 
+    if (!regex.test(value)) {
+        element.setCustomValidity('Invalid input: Please enter a valid number.');
+        return false;
+    }
+
+    const numericValue = parseFloat(value);
+
+    if (numericValue < min) {
+        element.setCustomValidity('Invalid input: Please enter a number greater than ' + min + '.');
+        return false;
+    }
+    if (numericValue > max) {
+        element.setCustomValidity('Invalid input: Please enter a number less than ' + max + '.');
+        return false;
+    }
+
+    element.setCustomValidity('');
+    return true;
+}
+
+function validateInput(event, min, max) {
+    const inputElement = event.target;
+    validateNumber(inputElement, min, max);
+    inputElement.checkValidity(); // This will show the custom validation message if the input is invalid
+}
 function isPhone() {
     return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
+
