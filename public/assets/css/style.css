@@ -163,13 +163,24 @@ body {
 }
 
 .greyContainer {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     padding: 12px;
     border-radius: 8px;
     margin: 0;
 }
-
+.greenContainer {
+    background-color: rgb(125 255 110);
+    padding: 12px;
+    border-radius: 8px;
+    margin: 0;
+}
 #devicesFileContainer {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.greyBackground{
     background-color: rgba(0, 0, 0, 0.6);
     padding: 12px;
     border-radius: 8px;
@@ -193,4 +204,22 @@ body {
 }
 .card ui-jqgrid-view{
     border-radius: 0;
+}
+
+.lastNavButton{
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+
+.navLink{
+    cursor: pointer;
+}
+
+.navLink:hover{
+    color: rgb(125 255 110);
+}
+
+.navLink:active{
+    color: black;
 }

@@ -81,6 +81,7 @@ class ProfileView {
                 </div>
                 <span class='font11px'> Humidity: ${Number(forecast.humidity.toFixed(2))} %</span><br>
                 <span class='font11px'> Wind: ${Number(forecast.wind_speed.toFixed(2))} km/h</span><br>
+                <span class='font11px'> UVI: ${forecast.uvi.toFixed(2)}</span><br>
                 <span class='font11px'> Precipication: ${Number(forecast.pop * 100).toFixed(0)} %</span><br>
                 <span class='font11px'> Rain: ${rain}</span>
 

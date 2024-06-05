@@ -7,6 +7,7 @@ const DeviceSchema = new mongoose.Schema({
   name: String,
   min_moisture: Number,
   max_moisture: Number,
+  rootZoneDepth: Number,
   plantType: String,
   location: String,
   sampleRate: Number,

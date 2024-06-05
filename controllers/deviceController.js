@@ -5,6 +5,7 @@ const axios = require('axios');
 const bodyParser = require('body-parser');
 const { getFilteredWeatherData, getSaveRealTimeData, getUserData } = require('./userController');
 const User = require('../models/user');
+const { spawn } = require('child_process');
 
 const deviceIPs = {};
 let saveRealTimeData;
@@ -16,7 +17,6 @@ const accountSid = process.env.SMS_accountSid;
 const authToken = process.env.SMS_TOKEN;
 const twilioPhoneNumber = '+12569801284';
 const client = twilio(accountSid, authToken);
-const spawn = require("child_process").spawn;
 
 async function deviceController(app) {
 
@@ -27,13 +27,14 @@ async function deviceController(app) {
         let minMoisture = parseInt(req.body.minMoisture) || 50;
         let maxMoisture = parseInt(req.body.maxMoisture) || 100;
         let sampleRate = parseInt(req.body.sampleRate) || 20000;
+        let rootZoneDepth = parseInt(req.body.rootZoneDepth) || 20;
 
         try {
             validateDeviceFields(minMoisture, maxMoisture, sampleRate, res);
             const result = await Plant.create({
                 name: req.body.name, user_id: req.session.user,
                 status: 'Not connected', device_id: req.body.device_id,
-                min_moisture: minMoisture, max_moisture: maxMoisture,
+                min_moisture: minMoisture, max_moisture: maxMoisture, rootZoneDepth: rootZoneDepth,
                 location: req.body.location, sampleRate: sampleRate
             });
 
@@ -66,6 +67,7 @@ async function deviceController(app) {
             const maxMoisture = parseInt(req.body.maxMoisture) || 100;
             const sampleRate = parseInt(req.body.sampleRate) || 20;
             const deviceId = req.body.device_id;
+            let rootZoneDepth = parseInt(req.body.rootZoneDepth) || 20;
 
             const authHeader = req.headers.authorization;
             const apiKey = authHeader.split(" ")[1];
@@ -88,12 +90,10 @@ async function deviceController(app) {
                 { device_id: deviceId }, // Query condition
                 {
                     device_id: deviceId,
-                    min_moisture: minMoisture, max_moisture: maxMoisture,
+                    min_moisture: minMoisture, max_moisture: maxMoisture, rootZoneDepth: rootZoneDepth,
                     location: location, sampleRate: sampleRate
                 },
             );
-
-
 
             if (device.sampleRate !== sampleRate) {
                 let sampleRateResult = await setDeviceSampleRate(deviceId, sampleRate, apiKey);
@@ -315,11 +315,10 @@ async function deviceController(app) {
 
             // Extract device IDs from the fetched devices
             const deviceIds = devices.map(device => device.device_id);
-            console.log(deviceIds)
             // Step 2: Fetch the latest 50 sensor data entries for each device
             const sensorData = await Promise.all(deviceIds.map(async deviceId => {
                 return await SensorData.find({ device_id: deviceId })
-                    .sort({ timestamp: -1 })
+                    .sort({ timestamp: 1 })
                     .limit(50);
             }));
 
@@ -369,7 +368,7 @@ async function deviceController(app) {
                     { $sort: { timestamp: -1 } } // Sort documents by timestamp in ascending order
                 );
 
-                const numberOfBins = 50;
+                let numberOfBins = 50;
                 pipeline.push(
                     {
                         $bucketAuto: {
@@ -541,43 +540,28 @@ async function deviceController(app) {
     }
 
     app.post('/api/predictMoisture', async (req, res) => {
-        // const deviceId = req.query.device_id; // Retrieve deviceId from query parameters
-        console.log('predictMoisture')
-        var moistureArray = req.body.moistureArray;
-        var data = req.body.data;
-        // console.log(req.body)
 
+        const moistureArray = req.body.moistureArray;
+        const devices = req.body.devices;
         try {
-            // if (!deviceId) {
-            //     return res.status(400).json({ error: 'Missing device_id in query parameters' });
-            // }
-
-            // let lastMoistureValue = await getLastMoistureValue(deviceId);
-            let filteredWeather = getFilteredWeatherData();
-            var predictedMoistureArray = [];
-            console.log(moistureArray)
-            // console.log(data)
             const filteredArray = moistureArray.filter(element => element !== null && element !== undefined);
-
-            try {
-                // Asynchronously predict moisture for each last moisture value
-                predictedMoistureArray = await Promise.all(filteredArray.map(async moistureValue => {
+            const filteredWeather = getFilteredWeatherData(); // Assuming this function is defined elsewhere
+            let i = -1;
+   
+            const predictedMoistureArray = await Promise.all(filteredArray.map(async moistureValue => {
+                if (moistureValue) {
+                    i++;
                     try {
-                        return await predictMoisture(filteredWeather, moistureValue);
+                        return await predictMoisture(filteredWeather, moistureValue, devices[i].rootZoneDepth, devices[i].min_moisture);
                     } catch (error) {
                         console.error(`Error predicting moisture: ${error}`);
-                        return null; // Handle error gracefully
+                        return null;
                     }
-                }));
-                console.log(predictedMoistureArray);
-            } catch (error) {
-                console.error(`Error predicting moisture: ${error}`);
-            }
+                }
+                return null;
+            }));
 
-            console.log('predictMoisture')
-
-            console.log(predictedMoistureArray)
-            // Send predictions as response
+            console.log(predictedMoistureArray);
             res.status(200).json({ predictedMoistureArray });
         } catch (error) {
             console.error('Error:', error);
@@ -585,32 +569,39 @@ async function deviceController(app) {
         }
     });
 
+    async function predictMoisture(forecastData, initialSoilMoisture, rootZoneDepth, wilting_point) {
 
-    /**
-     * 
-     * @param {*} forecastData 
-     * @param {*} initialSoilMoisture 
-     */
-    async function predictMoisture(forecastData, initialSoilMoisture) {
+        return new Promise((resolve, reject) => {
+            const forecastDataString = JSON.stringify(forecastData);
 
-        // const forecastDataString = JSON.stringify(forecastData);
-
-        const pythonProcess = spawn('python', ["../aiModel/predict.py", forecastData, initialSoilMoisture]);
-
-        return new Promise(function (resolve, reject) {
+            const pythonProcess = spawn('python', ["./aiModel/predict_soil_moisture.py", forecastDataString, initialSoilMoisture, rootZoneDepth, wilting_point]);
 
             pythonProcess.stdout.on('data', (data) => {
-                console.log('python response')
-                console.log(data.toString())
-
-                resolve(data.toString())
+                console.log('python response');
+                resolve(data.toString());
             });
+
+            pythonProcess.stderr.on('data', (data) => {
+                console.error(`stderr: ${data}`);
+                reject(data.toString());
+            });
+
+            pythonProcess.on('close', (code) => {
+                if (code !== 0) {
+                    reject(`Python process exited with code ${code}`);
+                }
+            });
+
+            pythonProcess.stdin.write(JSON.stringify({
+                forecastData: forecastData,
+                initialSoilMoisture: initialSoilMoisture,
+                rootZoneDepth: rootZoneDepth, 
+                wilting_point: wilting_point
+            }));
+            pythonProcess.stdin.end();
         });
     }
-
-
 }
-
 
 
 module.exports = { deviceController };

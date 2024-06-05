@@ -36,37 +36,37 @@ class ProfileController {
       });
     });
   }
-  getPredictedMoisture() {
-    // const apiKey = localStorage.getItem('apiKey');
-    const apiKey = user.api_key;
-    // Check if API key exists
-    if (!apiKey) {
-      // Reject the promise with an error message
-      reject('API key is missing');
-      return;
-    }
+  // getPredictedMoisture() {
+  //   // const apiKey = localStorage.getItem('apiKey');
+  //   const apiKey = user.api_key;
+  //   // Check if API key exists
+  //   if (!apiKey) {
+  //     // Reject the promise with an error message
+  //     reject('API key is missing');
+  //     return;
+  //   }
 
-    // Add the API key to the headers
-    const headers = {
-      'Authorization': `API_KEY ${apiKey}`
-    };
-    return new Promise(function (resolve, reject) {
-      // Use jQuery's AJAX function
-      $.ajax({
-        url: `/api/predictMoisture`,
-        method: 'GET',
-        headers: headers,
-        success: function (response) {
-          console.log(response)
-          resolve(response);
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-          // Handle the error here
-          reject();
-        }
-      });
-    });
-  }
+  //   // Add the API key to the headers
+  //   const headers = {
+  //     'Authorization': `API_KEY ${apiKey}`
+  //   };
+  //   return new Promise(function (resolve, reject) {
+  //     // Use jQuery's AJAX function
+  //     $.ajax({
+  //       url: `/api/predictMoisture`,
+  //       method: 'GET',
+  //       headers: headers,
+  //       success: function (response) {
+  //         console.log(response)
+  //         resolve(response);
+  //       },
+  //       error: function (jqXHR, textStatus, errorThrown) {
+  //         // Handle the error here
+  //         reject();
+  //       }
+  //     });
+  //   });
+  // }
 
   loginAjax(username, password) {
 

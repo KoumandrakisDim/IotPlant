@@ -23,16 +23,13 @@
   <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"
     integrity="sha256-ELi2cs17gL2MqNzkRkogxZsVLmL+oWfeVOwZQLcp8ek="></script>
 
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
   <link rel="stylesheet" crossorigin="anonymous"
     href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css"
     integrity="sha256-3oIi71IMpsoA+8ctSTIM+6ScXYjyZEV06q6bbK6CjsM=">
   <script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.3.1.min.js"
     integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="></script>
-  <script>
-    $.jgrid = $.jgrid || {};
-    $.jgrid.no_legacy_api = true;
-  </script>
+
   <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"
     integrity="sha256-ELi2cs17gL2MqNzkRkogxZsVLmL+oWfeVOwZQLcp8ek="></script>
 </head>
@@ -84,18 +81,19 @@
   <div id="main" class="d-none">
     <nav class="navbar navbar-light bg-light mb-2">
       <div class="container-fluid">
-        <ul class="navbar-nav">
-          <li class="nav-item" style="display:-webkit-box;">
-            <a class="nav-link" style="cursor: pointer;margin-left:10%;" onclick="showContainer('dashboard')">Home</a>
-
-
-            <a class="nav-link" style="cursor: pointer;margin-left:10%;"
-              onclick="showContainer('devicesFileContainer'), resizeGrid('devicesGrid', 'devicesContainer');hideColumnsBasedOnScreenSize('devicesContainer');">Devices</a>
-            <a class="nav-link" style="cursor: pointer;margin-left:10%;" onclick="profileController.logout()">Logout</a>
-            <a class="nav-link" style="cursor: pointer;;margin-left:10%;"
-            onclick="showContainer('profileContainer')"><i class="bi bi-gear"></i></a>
-            <!-- <a class="nav-link" style="cursor: pointer;margin-left:10%;"
-              onclick="showContainer('notificationsContainer')"><i class="bi bi-bell"></i></a> -->
+        <ul class="navbar-nav d-flex flex-row w-100">
+          <li class="nav-item">
+            <a class="nav-link mx-2 navLink" onclick="showContainer('dashboard')">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link mx-2 navLink"
+              onclick="showContainer('devicesFileContainer'); resizeGrid('devicesGrid', 'devicesContainer'); hideColumnsBasedOnScreenSize('devicesContainer');">Devices</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link mx-2 navLink" onclick="showContainer('profileContainer')"><i class="bi bi-gear"></i></a>
+          </li>
+          <li class="nav-item ml-auto lastNavButton">
+            <a class="nav-link mx-2 navLink" onclick="profileController.logout()">Logout</a>
           </li>
         </ul>
       </div>
@@ -117,8 +115,8 @@
             <label for="usernameView" class="white">Username</label>
             <input type="text" id="usernameView" class="form-control">
           </div>
-  
-  
+
+
 
         </div>
         <div class="col-6">
@@ -180,7 +178,7 @@
     </div>
     <div class="fileContainer" id="notificationsContainer">
       <div class="row">
-        
+
       </div>
     </div>
   </div>
@@ -207,7 +205,9 @@
           <label for="deviceMaxMoistureInput">Max moisture % (30 - 100)</label>
           <input class="form-control" id="deviceMaxMoistureInput" maxlength="3">
           <label for="deviceSampleRateInput">Sample rate (Seconds)</label>
-          <input class="form-control" id="deviceSampleRateInput" maxlength="7">
+          <input class="form-control" id="deviceSampleRateInput" maxlength="3">
+          <label for="rootZoneDepthInput">Root zone depth (cm)</label>
+          <input class="form-control" id="rootZoneDepthInput" maxlength="5">
           <label for="deviceLocationInput">Location</label>
           <select id="deviceLocationInput" class="form-select">
             <option value="indoors">Indoors</option>
@@ -228,7 +228,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
 
 
-
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
   integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
 

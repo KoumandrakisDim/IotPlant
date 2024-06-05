@@ -135,7 +135,8 @@ async function fillUserProfileData(data) {
     saveDailyWeatherData(weatherData);
 
     let lastMoistureValues = [];
-    console.log(userDevicesData)
+    let rootZoneDepthsArrays = [];
+
     if (userDevicesData.length > 0) {
       userDevicesData.forEach(function (data) {
         console.log(data)
@@ -146,7 +147,8 @@ async function fillUserProfileData(data) {
       console.log(weatherData)
 
       console.log(lastMoistureValues)
-      let predictions = await deviceController.predictMoisture(weatherData, lastMoistureValues);
+
+      let predictions = await deviceController.predictMoisture(weatherData, lastMoistureValues, devicesView.devices);
       let predictionCharts = document.querySelectorAll('.predictionChart');
       console.log(predictions)
 
@@ -265,31 +267,7 @@ function toggleRegister(id) {
 }
 
 
-function newDeviceShowModal() {
-  devicesView.clearDeviceFormFields();
-  document.getElementById('newDeviceModal').deviceId = '';
-  $('#newDeviceModal').modal('show');
-}
-function newDevice() {
-  let deviceId = document.getElementById('newDeviceModal').deviceId;
-  if (deviceId) {
-    deviceController.editDevice({
-      device_id: deviceId, name: document.getElementById('newDeviceName').value, name: document.getElementById('newDeviceName').value,
-      minMoisture: document.getElementById('deviceMinMoistureInput').value, maxMoisture: document.getElementById('deviceMaxMoistureInput').value,
-      sampleRate: document.getElementById('deviceSampleRateInput').value, location: document.getElementById('deviceLocationInput').value
-    });
-  } else {
-    const newDeviceId = document.getElementById('newDeviceId').value;
-    if (newDeviceId.length > 0) {
-      deviceController.createDeviceAjax({
-        device_id: newDeviceId, name: document.getElementById('newDeviceName').value, name: document.getElementById('newDeviceName').value,
-        minMoisture: document.getElementById('deviceMinMoistureInput').value, maxMoisture: document.getElementById('deviceMaxMoistureInput').value,
-        sampleRate: document.getElementById('deviceSampleRateInput').value, location: document.getElementById('deviceLocationInput').value
-      });
-    }
-  }
 
-}
 function addRealTimeDataToChart(newValue) {
   let date = new Date();
   let fomattedDate = formatDateString(date);
@@ -353,12 +331,11 @@ async function getPredictedMoisture(deviceId) {
 
   $(loadingIcon).show();
   document.getElementById('predictedMoistureChart_' + deviceId).style.opacity = 0.5;
-  console.log(chart.data.datasets[0]);
+
   let lastMoistureValues = [];
 
   if (userDevicesData.length > 0) {
     userDevicesData.forEach(function (data) {
-      console.log(data)
       if(data.length > 0){
         if (data[data.length - 1].device_id === deviceId) {
           lastMoistureValues.push(data[data.length - 1].moisture);
@@ -366,17 +343,15 @@ async function getPredictedMoisture(deviceId) {
       }
     })
   }
+  let devices = devicesView.devices.filter(item => item.id = deviceId);
 
-  let lastMoistureValue = chart.data.datasets[0];
+  // let lastMoistureValue = chart.data.datasets[0];
   chart.data.datasets[0].data = [];
   chart.update();
-  let predictedMoisture;
 
   try {
-    console.log(savedWeather)
-    console.log(loadingIcon.id)
 
-    let predictions = await deviceController.predictMoisture(savedWeather, lastMoistureValues);
+    let predictions = await deviceController.predictMoisture(savedWeather, lastMoistureValues, devices);
 
     updatePredictionChart(predictions.predictedMoistureArray[0], chartId, loadingIcon.id)
 
@@ -385,6 +360,4 @@ async function getPredictedMoisture(deviceId) {
     showAlert('alert', 'Error getting moisture prediction: ' + error);
     return;
   }
-  console.log(predictedMoisture)
-
 }

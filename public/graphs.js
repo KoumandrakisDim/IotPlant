@@ -51,7 +51,6 @@ function loadChart(data, device) {
 
     let newGraphDiv = document.createElement('canvas');
     document.getElementById('devicesChart_' + device).appendChild(newGraphDiv);
-
     // const filteredData = graphData.filter((point, index) => index % n === 0);
 
     devicesChart = new Chart(newGraphDiv, {
@@ -119,6 +118,7 @@ function loadChart(data, device) {
             },
         },
     });
+
     document.getElementById('devicesChart_' + device).chart = devicesChart;
 
 }
@@ -316,7 +316,7 @@ function loadDevicesCharts(sensorData) {
 
 function createChartContainer(deviceId) {
     const container = document.createElement('div');
-    container.className = 'row';
+    container.className = 'row greenContainer mb-3';
     container.id = 'row_' + deviceId;
 
     const leftColumn = document.createElement('div');
