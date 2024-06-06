@@ -89,9 +89,9 @@ async function deviceController(app) {
             const result = await Plant.findOneAndUpdate(
                 { device_id: deviceId }, // Query condition
                 {
-                    device_id: deviceId,
+                    device_id: deviceId, name: req.body.name,
                     min_moisture: minMoisture, max_moisture: maxMoisture, rootZoneDepth: rootZoneDepth,
-                    location: location, sampleRate: sampleRate
+                    location: location, sampleRate: sampleRate, 
                 },
             );
 
@@ -163,50 +163,47 @@ async function deviceController(app) {
             res.status(500).send('Internal Server Error');
         }
     });
-
     app.post('/user/:userId/devicesGrid', async (req, res) => {
         const userId = req.params.userId;
-
+    
         try {
-            // Retrieve devices for the specified user
-            let devices;
-            let filter = {}; // Initialize filter outside the if block
+            let filter = {};
             if (req.body._search) {
                 const searchField = req.body.searchField;
                 const searchString = req.body.searchString;
                 const searchOper = req.body.searchOper;
-
+    
                 if (searchField && searchString && searchOper) {
-                    // Construct the filter based on the search parameters
                     switch (searchOper) {
                         case 'eq':
                             filter[searchField] = searchString;
                             break;
                         case 'cn':
-                            filter[searchField] = { $regex: searchString, $options: 'i' }; // Case-insensitive search
+                            filter[searchField] = { $regex: searchString, $options: 'i' };
                             break;
-                        // Add other search operations as needed
                     }
                 }
             }
-
-            // Apply sorting and filtering to the devices query
+    
             let query = Plant.find({ user_id: userId });
-            if (filter) {
+            if (Object.keys(filter).length > 0) {
                 query = query.where(filter);
             }
-
-            // Determine the sort order based on the request from jqGrid
-            const sortField = req.body.sidx;
-            const sortOrder = req.body.sord;
-            if (sortOrder === 'asc' || sortOrder === 'desc') {
-                query = query.sort({ [sortField]: sortOrder }); // Set the sort order based on the request
-            }
-
-            // Execute the query and retrieve the devices
-            devices = await query.exec();
-
-            // Modify the devices data to include a column for the delete button
+    
+            const sortField = req.body.sidx || 'device_id';
+            const sortOrder = req.body.sord || 'asc';
+            query = query.sort({ [sortField]: sortOrder });
+    
+            const page = parseInt(req.body.page) || 1;
+            const rows = parseInt(req.body.rows) || 15;
+    
+            const totalRecords = await Plant.countDocuments({ user_id: userId, ...filter }).exec();
+            const totalPages = Math.ceil(totalRecords / rows);
+    
+            query = query.skip((page - 1) * rows).limit(rows);
+    
+            const devices = await query.exec();
+    
             const devicesWithDeleteButton = devices.map(device => {
                 return {
                     user_id: device.user_id,
@@ -219,16 +216,21 @@ async function deviceController(app) {
                     sampleRate: device.sampleRate,
                     action: `<i class='bi bi-pencil text-primary' style='padding-right:10%;cursor:pointer;' onclick="devicesView.editDevice('${device.device_id}')"></i><i class='bi bi-trash text-danger' style='padding-left:10%;cursor:pointer;' onclick="deviceController.deleteDevice('${device.device_id}')"></i>`
                 };
-
             });
-
-            // Return the modified data
-            res.json(devicesWithDeleteButton);
+    
+            res.json({
+                page: page,
+                total: totalPages,
+                records: totalRecords,
+                rows: devicesWithDeleteButton
+            });
         } catch (error) {
             console.error(error);
             res.status(500).send("Internal Server Error");
         }
     });
+    
+    
 
     // Define the route handler for firmware updates
     app.post('/api/reprogramDevice', validateApiKey, async (req, res) => {

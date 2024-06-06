@@ -50,9 +50,7 @@ function newDevice() {
         return false;
     }
 
-    if(document.getElementById('newDeviceForm').classList.add('was-validated')){
 
-    }
     if (deviceId) {
         deviceController.editDevice({
             device_id: deviceId, name: document.getElementById('newDeviceName').value,
@@ -77,9 +75,7 @@ function newDevice() {
     }
 
 }
-function checkDeviceFields(event) {
-    event.preventDefault(); // Prevent the form from submitting
-
+function checkDeviceFields() {
     let isInvalid = false;
 
     const elements = [
@@ -88,6 +84,9 @@ function checkDeviceFields(event) {
         { id: 'deviceSampleRateInput', min: 1, max: 1000 },
         { id: 'rootZoneDepthInput', min: 0, max: Infinity } // Assuming no upper limit for root zone depth
     ];
+    if(document.getElementById('newDeviceName').value.length < 1 || document.getElementById('newDeviceId').value.length < 1){
+        return false;
+    }
 
     for (const el of elements) {
         const inputElement = document.getElementById(el.id);
@@ -96,8 +95,9 @@ function checkDeviceFields(event) {
         }
     }
 
-    if (!isInvalid && event.target.checkValidity()) {
+    if (isInvalid) {
         // If all fields are valid, submit the form programmatically
-        event.target.submit();
+        return false;
     }
+    return true;
 }

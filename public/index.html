@@ -9,27 +9,22 @@
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"
     integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+  <!--bootstrap-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
     integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+
+  <!--assets-->
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/buttons.css">
-
   <link rel="icon" href="assets/icons/plant2.png">
-  <!-- Option 1: Include in HTML -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+
+
+  <!--jqgrid-->
   <link rel="stylesheet" crossorigin="anonymous"
     href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css"
     integrity="sha256-3oIi71IMpsoA+8ctSTIM+6ScXYjyZEV06q6bbK6CjsM=">
-  <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"
-    integrity="sha256-ELi2cs17gL2MqNzkRkogxZsVLmL+oWfeVOwZQLcp8ek="></script>
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-  <link rel="stylesheet" crossorigin="anonymous"
-    href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css"
-    integrity="sha256-3oIi71IMpsoA+8ctSTIM+6ScXYjyZEV06q6bbK6CjsM=">
-  <script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.3.1.min.js"
-    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="></script>
-
   <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"
     integrity="sha256-ELi2cs17gL2MqNzkRkogxZsVLmL+oWfeVOwZQLcp8ek="></script>
 </head>
@@ -199,28 +194,34 @@
           <div id="alertModal" class="alert alert-danger"></div>
 
           <form id="newDeviceForm" class="needs-validation" novalidate>
-            <label for="deviceName">Device name</label>
+            <label for="newDeviceName">Device name</label>
             <input class="form-control" id="newDeviceName" maxlength="30" required>
-            <div class="invalid-feedback">Please provide a valid device name</div>
-            <label for="deviceName">Device id</label>
+            <!-- <div class="invalid-feedback" id="newDeviceNameError">Please provide a valid device name</div> -->
+
+            <label for="newDeviceId">Device id</label>
             <input class="form-control" id="newDeviceId" maxlength="30" required>
-            <div class="invalid-feedback">Please provide a valid device id</div>
+            <!-- <div class="invalid-feedback" id="newDeviceIdeError">Please provide a valid device id</div> -->
+
             <label for="deviceMinMoistureInput">Min moisture % (0 - 100)</label>
             <input class="form-control" id="deviceMinMoistureInput" maxlength="3" required
               oninput="validateInput(event, 0, 100)">
-            <div class="invalid-feedback">Please provide a valid minimum moisture</div>
+            <!-- <div class="invalid-feedback" id="deviceMinMoistureInputError">Please provide a valid minimum moisture</div> -->
+
             <label for="deviceMaxMoistureInput">Max moisture % (0 - 100)</label>
             <input class="form-control" id="deviceMaxMoistureInput" maxlength="3"
               oninput="validateInput(event, 0, 100)">
-            <div class="invalid-feedback">Please provide a valid maximum moisture</div>
+            <!-- <div class="invalid-feedback" id="deviceMaxMoistureInputError">Please provide a valid maximum moisture</div> -->
+
             <label for="deviceSampleRateInput">Sample rate (Seconds 1 - 1000)</label>
             <input class="form-control" id="deviceSampleRateInput" maxlength="4"
               oninput="validateInput(event, 1, 1000)">
-            <div class="invalid-feedback">Please provide a valid device sample rate</div>
+            <!-- <div class="invalid-feedback" id="deviceSampleRateInputError">Please provide a valid device sample rate</div> -->
+
             <label for="rootZoneDepthInput">Root zone depth (cm)</label>
             <input class="form-control" id="rootZoneDepthInput" maxlength="5" required
               oninput="validateInput(event, 0, Infinity)">
-            <div class="invalid-feedback">Please provide a valid root zone depth</div>
+            <!-- <div class="invalid-feedback" id="rootZoneDepthInputError">Please provide a valid root zone depth</div> -->
+
             <label for="deviceLocationInput">Location</label>
             <select id="deviceLocationInput" class="form-select">
               <option value="indoors">Indoors</option>

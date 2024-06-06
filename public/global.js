@@ -280,7 +280,7 @@ function validateNumber(element, min, max) {
 function validateInput(event, min, max) {
     const inputElement = event.target;
     validateNumber(inputElement, min, max);
-    inputElement.checkValidity(); // This will show the custom validation message if the input is invalid
+    inputElement.reportValidity(); // This will show the custom validation message if the input is invalid
 }
 function isPhone() {
     return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);

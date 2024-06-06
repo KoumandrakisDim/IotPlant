@@ -176,42 +176,70 @@ class DeviceController {
 
   loadDevicesGrid(userId) {
     $("#devicesGrid").jqGrid({
-      url: `/user/${userId}/devicesGrid`,
-      datatype: "json",
-      mtype: 'POST',
-      colNames: ["id", "Name", "Status", "MinMoisture", "MaxMoisture", "location", "sampleRate", "Action"],
-      colModel: [
-        { name: "device_id", index: "device_id", width: 100, align: 'center', key: true },
-        { name: "name", index: "name", align: 'center', width: 100 },
-        { name: "status", index: "status", align: 'center', width: 150 },
-        { name: "minMoisture", index: "minMoisture", align: 'center', width: 150 },
-        { name: "maxMoisture", index: "maxMoisture", align: 'center', width: 150 },
-        { name: "location", index: "location", align: 'center', width: 150 },
-        { name: "sampleRate", index: "sampleRate", align: 'center', width: 150 },
-
-        { name: "action", width: 200, sortable: false, search: false, align: 'center', formatter: actionButtonsFormatter }
-      ],
-      height: 300,
-      guiStyle: "bootstrap4",
-      iconSet: "fontAwesome",
-      rownumbers: true,
-      sortname: "invdate",
-      sortorder: "desc",
-      threeStateSort: true,
-      sortIconsBeforeText: true,
-      headertitles: true,
-      toppager: false,
-      pager: 'pager',
-      rowNum: 5,
-      viewrecords: true,
-      searching: true,
-      searching: {
-        defaultSearch: "cn"
-      }
+        url: `/user/${userId}/devicesGrid`,
+        datatype: "json",
+        mtype: 'POST',
+        colNames: ["id", "Name", "Status", "MinMoisture", "MaxMoisture", "Location", "SampleRate", "Action"],
+        colModel: [
+            { name: "device_id", index: "device_id", width: 100, align: 'center', key: true, sortable: true },
+            { name: "name", index: "name", align: 'center', width: 100, sortable: true, search: true },
+            { name: "status", index: "status", align: 'center', width: 150, sortable: true, search: true },
+            { name: "minMoisture", index: "minMoisture", align: 'center', width: 150, sortable: true, search: true },
+            { name: "maxMoisture", index: "maxMoisture", align: 'center', width: 150, sortable: true, search: true },
+            { name: "location", index: "location", align: 'center', width: 150, sortable: true, search: true },
+            { name: "sampleRate", index: "sampleRate", align: 'center', width: 150, sortable: true, search: true },
+            { name: "action", width: 200, sortable: false, search: false, align: 'center', formatter: actionButtonsFormatter }
+        ],
+        height: 400,
+        guiStyle: "bootstrap4",
+        iconSet: "fontAwesome",
+        rownumbers: true,
+        sortname: "device_id",
+        sortorder: "asc",
+        threeStateSort: true,
+        sortIconsBeforeText: true,
+        headertitles: true,
+        toppager: false,
+        pager: '#pager',
+        rowNum: 15,
+        rowList: [15, 30, 45],
+        viewrecords: true,
+        caption: "Devices",
+        jsonReader: {
+            root: "rows",
+            page: "page",
+            total: "total",
+            records: "records",
+            repeatitems: false,
+            id: "device_id"
+        },
+        prmNames: {
+            page: "page",
+            rows: "rows",
+            sort: "sidx",
+            order: "sord",
+            search: "_search",
+            nd: "nd",
+            id: "id",
+            filter: "filters",
+            searchField: "searchField",
+            searchString: "searchString",
+            searchOper: "searchOper"
+        },
+        loadComplete: function() {
+            const $grid = $("#devicesGrid");
+            if ($grid.getGridParam("records") === 0) {
+                $grid.addRowData("noData", {
+                    device_id: "No records found"
+                });
+            }
+        }
     });
+
     function actionButtonsFormatter(cellValue, options, rowObject) {
-      return cellValue;
+        return cellValue;
     }
-  }
+}
+
 
 }
