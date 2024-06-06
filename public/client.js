@@ -139,14 +139,10 @@ async function fillUserProfileData(data) {
 
     if (userDevicesData.length > 0) {
       userDevicesData.forEach(function (data) {
-        console.log(data)
         if(data.length > 0){
-          lastMoistureValues.push(data[data.length - 1].moisture);
+          lastMoistureValues.push(data[0].moisture);
         }
       })
-      console.log(weatherData)
-
-      console.log(lastMoistureValues)
 
       let predictions = await deviceController.predictMoisture(weatherData, lastMoistureValues, devicesView.devices);
       let predictionCharts = document.querySelectorAll('.predictionChart');
@@ -337,8 +333,8 @@ async function getPredictedMoisture(deviceId) {
   if (userDevicesData.length > 0) {
     userDevicesData.forEach(function (data) {
       if(data.length > 0){
-        if (data[data.length - 1].device_id === deviceId) {
-          lastMoistureValues.push(data[data.length - 1].moisture);
+        if (data[0].device_id === deviceId) {
+          lastMoistureValues.push(data[0].moisture);
         }
       }
     })

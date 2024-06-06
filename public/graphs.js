@@ -13,15 +13,14 @@ function loadChart(data, device) {
     let graphDatahumidity = [];
     let filteredData = data;
 
-    filteredData.forEach(function (deviceData) {
-
-        labels.push(formatDateString(deviceData.timestamp));
-        graphDatamoisture.push(deviceData.moisture);
-        graphDatatempterature.push(deviceData.temperature);
-        graphDatahumidity.push(deviceData.humidity);
+    for (i = filteredData.length - 1; i >= 0; i--) {
+        labels.push(formatDateString(filteredData[i].timestamp));
+        graphDatamoisture.push(filteredData[i].moisture);
+        graphDatatempterature.push(filteredData[i].temperature);
+        graphDatahumidity.push(filteredData[i].humidity);
 
         devices = data;
-    })
+    }
 
     var datasets = [{
         label: 'Moisture',
@@ -255,7 +254,7 @@ function updateChart(data, timeWindow, chartElement) {
 
 function updatePredictionChart(data, chartId, loadingIconId) {
     console.log(data)
-    if(!data){
+    if (!data) {
         return;
     }
     // data = filterArray(data.predictedMoisture);
@@ -290,7 +289,7 @@ function updatePredictionChart(data, chartId, loadingIconId) {
 function loadDevicesCharts(sensorData) {
     console.log(sensorData);
     let i = 0;
-    sensorData.forEach(function(deviceData) {
+    sensorData.forEach(function (deviceData) {
         console.log(deviceData);
 
         // Assuming deviceData is an array of sensor data entries for a device
@@ -339,7 +338,7 @@ function createChartContainer(deviceId) {
         label.textContent = labelText;
         buttonContainer.appendChild(label);
 
-        if(label.getAttribute('value') === 'realtime'){
+        if (label.getAttribute('value') === 'realtime') {
             label.classList.add('selectedTimeWindow');
         }
 
@@ -412,13 +411,13 @@ async function changeTimeWindow(device_id, timeWindow) {
             chartLoaded = true;
         }
 
-        if(!fetchDataInterval){
+        if (!fetchDataInterval) {
             let fetchDataInterval = null;
             // if (timeWindow === 'realTime') {
             //     if (!fetchDataInterval && profileView.user.toggleSaveSensorData) {
             //         fetchDataInterval = setInterval(() => changeTimeWindow(null, timeWindow), 21000);
             //     }
-    
+
             // } else {
             //     clearInterval(fetchDataInterval);
             //     fetchDataInterval = null;
@@ -448,15 +447,15 @@ function selectTimeWindowClick(timeWindowButton, timeWindow) {
     changeTimeWindow(deviceId, timeWindow);
 }
 
-function applyLoadingToChart(chartId){
+function applyLoadingToChart(chartId) {
     let chart = document.getElementById(chartId);
     chart.style.opacity = 0.5;
     console.log(chart)
-    
+
     chart.parentNode.querySelector('.spinner-container').firstChild.style.display = 'block';
-  }
-  function removeLoadingFromChart(chartId){
+}
+function removeLoadingFromChart(chartId) {
     let chart = document.getElementById(chartId);
-    chart.style.opacity = 1;    
+    chart.style.opacity = 1;
     chart.parentNode.querySelector('.spinner-container').firstChild.style.display = 'none';
-  }
+}
